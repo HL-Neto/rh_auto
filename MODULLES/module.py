@@ -71,12 +71,49 @@ def add_user(nome:str , meta:int , motos:int, pops:int, vendas_card:int , vendas
 
     return
 
+def edit_user(nome:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
+    
+    db      = firestore.client()
+    col_ref = db.collection("vendedores")
+    search  = col_ref.where("nome", "==", nome).stream()
+    
+    data ={}
+    
+    
+    if meta not in (None, ""):
+        data["meta"] = int(meta)
+
+    if motos not in (None, ""):
+        data["motos"] = int(motos)
+
+    if pops not in (None, ""):
+        data["pops"] = int(pops)
+
+    if vendas_card not in (None, ""):
+        data["vendas_card"] = int(vendas_card)
+
+    if vendas_other not in (None, ""):
+        data["vendas_other"] = int(vendas_other)
+
+    if not data:
+        return 0
+    
+    updated = 0
+
+    for doc in search:
+        
+        doc.reference.update(data)
+        updated += 1
+    
+
+    return updated
+
+
 def delet_user(nome:str):
     
-    db = firestore.client()
-    
+    db      = firestore.client()
     col_ref = db.collection("vendedores")
-    query = col_ref.where("nome", "==", nome)
+    query   = col_ref.where("nome", "==", nome)
 
     search = query.stream()
     
@@ -92,7 +129,7 @@ def delet_user(nome:str):
     
 def get_user(nome:str):
     
-    db = firestore.client()
+    db      = firestore.client()
     col_ref = db.collection("vendedores")
     vendedores = []
     
@@ -111,4 +148,25 @@ def get_user(nome:str):
         vendedores.append(dados)
     
     return vendedores
+
+
+def calc(meta:int , vendas: int, vendas_card: int, vendas_other: int) -> int:
+    
+    """Calcula o bônus do vendedor quando a quantidade de vendas ultrapassa a meta."""
+    if vendas >= meta :
+        
+        vendas_card_bonus = vendas_card * 15
+        vendas_other_bonus = vendas_other * 30
+        
+        total = vendas_other_bonus + vendas_card_bonus 
+        
+        
+        return total
+    
+    return 0
+
+
+    
+    
+    
             

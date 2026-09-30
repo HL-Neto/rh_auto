@@ -1,6 +1,6 @@
 import os
 from flask  import Flask, request, render_template
-from MODULLES.module import add_user , delet_user , get_user , pdfRead
+from MODULLES.module import add_user , delet_user , get_user , pdfRead , edit_user
 from LLM.llm  import llm
 
 
@@ -20,11 +20,11 @@ def index():
 def add():
 
     
-    nome = request.form.get("nome")
-    meta = (request.form.get("meta"))
+    nome  = request.form.get("nome")
+    meta  = (request.form.get("meta"))
     motos = (request.form.get("motos"))
-    pops = (request.form.get("pops"))
-    vendas_card = (request.form.get("vendas_card"))
+    pops  = (request.form.get("pops"))
+    vendas_card  = (request.form.get("vendas_card"))
     vendas_other = (request.form.get("vendas_other"))
 
     add_user(nome, meta , motos , pops, vendas_card, vendas_other)
@@ -37,31 +37,55 @@ def delete():
     nome = request.form.get("nome")
     delet_user(nome)
     
+    vendedores = get_user("all")
     
+    return render_template(
+        "index.html",
+        vendedores = vendedores
+    )
 
+@app.route("/editar", methods=["POST"]) 
+def edit():
+    
+    nome  = request.form.get("nome")
+    meta  = (request.form.get("meta"))
+    motos = (request.form.get("motos"))
+    pops  = (request.form.get("pops"))
+    vendas_card  = (request.form.get("vendas_card"))
+    vendas_other = (request.form.get("vendas_other"))
+    
+    edit_user(nome, meta , motos , pops, vendas_card, vendas_other)
+    vendedores = get_user("all")
+    
+    return render_template(
+        "index.html",
+        vendedores = vendedores
+    )
 
 @app.route("/buscar", methods=["POST"]) 
 def get(): 
     
-    nome = request.form.get("nome") 
+    nome       = request.form.get("nome") 
     vendedores = get_user(nome) 
     
     return render_template( "index.html", vendedores=vendedores )
+
 
 @app.route("/processar-pdfs", methods=["POST"])
 def processar_pdfs():
 
     context = pdfRead()
-
-    resultado = llm(context)
-
+    llm(context)
+    
     vendedores = get_user("all")
 
     return render_template(
+       
         "index.html",
-        vendedores=vendedores,
-        resultado_ia=resultado
+        vendedores  = vendedores,
     )
+    
+
 
 if __name__ == "__main__":
     app.run(debug=True)

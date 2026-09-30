@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -588,6 +588,125 @@
 
             </div>
 
+            <!--  EDIT USER -->
+
+            <div class="card full">
+
+                <h2>Editar vendedor</h2>
+
+                <p class="card-description">
+                    Altere os dados de um vendedor utilizando o ID do documento.
+                </p>
+
+                <form action="/editar" method="POST">
+
+                    <div class="form-grid">
+
+                        <div class="campo full">
+                            <label for="nome_editar">
+                                Nome do vendedor
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nome_editar"
+                                name="nome"
+                                placeholder="Digite o novo nome"
+                                required
+                            >
+                        </div>
+
+                        <div class="campo">
+                            <label for="meta_editar">
+                                Meta de motos
+                            </label>
+
+                            <input
+                                type="number"
+                                id="meta_editar"
+                                name="meta"
+                                min="0"
+                                placeholder="Ex: 10"
+                               
+                            >
+                        </div>
+
+                        <div class="campo">
+                            <label for="motos_editar">
+                                Motos vendidas
+                            </label>
+
+                            <input
+                                type="number"
+                                id="motos_editar"
+                                name="motos"
+                                min="0"
+                                placeholder="Ex: 12"
+                               
+                            >
+                        </div>
+
+                        <div class="campo">
+                            <label for="pops_editar">
+                                POPs
+                            </label>
+
+                            <input
+                                type="number"
+                                id="pops_editar"
+                                name="pops"
+                                min="0"
+                                placeholder="Ex: 5"
+                                
+                            >
+                        </div>
+
+                        <div class="campo">
+                            <label for="vendas_card_editar">
+                                Vendas no cartão
+                            </label>
+
+                            <input
+                                type="number"
+                                id="vendas_card_editar"
+                                name="vendas_card"
+                                min="0"
+                                placeholder="Ex: 6"
+                               
+                            >
+                        </div>
+
+                        <div class="campo full">
+                            <label for="vendas_other_editar">
+                                Outras formas de pagamento
+                            </label>
+
+                            <input
+                                type="number"
+                                id="vendas_other_editar"
+                                name="vendas_other"
+                                min="0"
+                                placeholder="Ex: 6"
+                               
+                            >
+                        </div>
+
+                    </div>
+
+                    <br>
+
+                    <button
+                        type="submit"
+                        class="btn-buscar"
+                    >
+                        Editar vendedor
+                    </button>
+
+                </form>
+
+            </div>
+            
+
             <!-- UPLOAD PDF -->
             <div class="card">
                 <h2>Enviar PDF</h2>
@@ -642,16 +761,6 @@
                         Ativar IA e ler PDFs
                     </button>
                 </form>
-
-                {% if resultado_ia %}
-                <div class="resultado">
-                    <div class="resultado-title">
-                        Resultado da IA
-                    </div>
-
-                    <p>{{ resultado_ia }}</p>
-                </div>
-                {% endif %}
             </div>
 
         </div>
@@ -661,4 +770,4 @@
 </body>
 
 </html>
-```
+

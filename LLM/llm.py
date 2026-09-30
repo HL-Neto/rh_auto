@@ -3,10 +3,9 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 
-from TOOLS.tools import add_UserTool, get_userTool
+from TOOLS.tools import add_UserTool, get_userTool , edit_Usertool
 
 load_dotenv()
-
 
 def llm(context):
 
@@ -14,105 +13,69 @@ def llm(context):
     print("INICIANDO LLM")
     print("==============================")
 
-    print("\n[1] Contexto recebido:")
-    print(context)
-
-    print("\n[2] Criando modelo Gemini...")
-
     model = ChatGoogleGenerativeAI(
-        model="gemini-3.1-flash-lite"
+        model="gemini-3.5-flash-lite"
     )
 
-    print("[OK] Modelo criado")
+    prompt = f""" ultilize a ferramenta edit_Usertool para colocar as metas nos respectivos usuários
+VENDEDORES	META DE MOTOS
+ALDAIR FERREIRA DA SILVA	35
+ALISSON VELOSO DA SILVA	10
+ANA KALYNE DA MATA	15
+ANDREZA ALMEIDA DA SILVA	55
+ARYLENNE ALVES DA COSTA	35
+CARLOS EDUARDO SILVA DOS SANTOS	7
+CLEONDES GEFFERSON FARIAS FERREIRA	8
+ELIONAI ANDERSON ELEUTERIO DE AQUINO	20
+HELLITON RODRIGUES DE ALENCAR	10
+JEFERSON CALDAS FELIPE DE FREITAS	10
+JOSE ELTON DO NASCIMENTO TEODOSIO	30
+JOSE ROBERTO DA SILVA	16
+KAREN JOSSANY RODRIGUES DO CARMO	15
+LAIS MENDONÇA AMORIM	6
+LEONARDO JOSE DA SILVA	35
+LUCAS ALBINO RIBEIRO	7
+LUCAS DE SOUZA DIAS	4
+LUIZ ANDRE FELINTO DA SILVA	6
+MARCIO DIAS DE ANDRADE	8
+MARCIO RUBENS FERREIRA DA SILVA	6
+MARCOS ANTONIO DOS SANTOS	16
+NICHOLLAS DEVID DE LIMA PONTES	6
+OTHAVIO AUGUSTO LEOCADIO SOUZA	35
+RENATA COSTA DA SILVA DOS SANTOS	5
+RHUANN CARLOS MARINHO DOS SANTOS	8
+SANDRA FERNANDES DOS SANTOS	55
+THIAGO IRINEU PESSOA	8
+VINICIUS BARBOSA DA SILVA	8
+VINICIUS GABRIEL DA SILVA	8
+WILSON ARAUJO DE OLIVEIRA	10
 
-    prompt = f"""
-Você é responsável por processar relatórios de vendas de uma concessionária.
-
-Sua tarefa é ler os dados dos relatórios fornecidos e cadastrar os vendedores
-corretamente no banco de dados utilizando a ferramenta add_UserTool.
-
-REGRAS:
-
-1. Extraia exclusivamente os dados presentes nos relatórios.
-
-2. Para cada os 5 primeiros vendedores, identifique:
-   - Nome do vendedor
-   - Quantidade de motos vendidas
-   - Quantidade de POPs
-   - Quantidade de pagamentos realizados no cartão
-   - Quantidade de pagamentos realizados em outras formas
-
-depois ignore o resto , sua missão foi concluida
-
-3. Não invente nenhum dado.
-
-4. Não altere os nomes dos vendedores.
-
-5. Não crie vendedores que não estejam nos relatórios.
-
-6. Não faça estimativas.
-
-7. Caso algum dado não esteja presente ou não possa ser identificado,
-   não invente um valor.
-
-8. Utilize a ferramenta add_UserTool para cadastrar os dados no banco.
-
-9. Antes de cadastrar, organize corretamente os dados de cada vendedor.
-
-10. Processe todos os vendedores encontrados nos relatórios.
-
-11. O documento possui várias páginas.
-    Processe o documento de forma sequencial.
-
-
-DADOS DOS RELATÓRIOS:
-
-{context}
 """
 
-    print("\n[3] Prompt criado")
-    print("------------------------------")
+    print("\n[1] Prompt criado")
     print(prompt)
-    print("------------------------------")
-
-    print("\n[4] Criando agente...")
 
     agent = create_agent(
         model=model,
         tools=[
             add_UserTool,
-            get_userTool
+            get_userTool,
+            edit_Usertool
         ]
     )
-
-    print("[OK] Agente criado")
-
-    print("\n[5] Enviando dados para a IA...")
 
     answer = agent.invoke({
         "messages": [
             ("system", prompt),
-            ("user", context)
+            ("user", "Processe os dados dos PDFs e atualize o banco de dados.")
         ]
     })
-
-    print("[OK] IA respondeu")
-
-    print("\n[6] Resposta completa do agente:")
-    print(answer)
-
-    print("\n[7] Extraindo resposta final...")
 
     text = answer["messages"][-1].content
 
     print("\n==============================")
     print("RESPOSTA FINAL DA IA")
     print("==============================")
-
     print(text)
-
-    print("\n==============================")
-    print("LLM FINALIZADA")
-    print("==============================")
 
     return text
