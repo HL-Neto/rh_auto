@@ -1,6 +1,6 @@
 from API.api import app 
 from MODULLES.module import pdfRead
-from LLM.llm  import llm
+from LLM.llm  import llm_process, command_process
 
 
 

@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Motomar · Gestão de Vendedores</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --red: #e50914;
+            --red-dark: #b20710;
+            --red-soft: #fff1f2;
+
+            --black: #0b0b0d;
+            --black-2: #151518;
+            --black-3: #202024;
+
+            --white: #ffffff;
+            --background: #f5f5f5;
+            --text: #171719;
+            --muted: #77777f;
+            --border: #e7e7e9;
+
+            --sidebar: 255px;
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "DM Sans", sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+
+            width: var(--sidebar);
+            height: 100vh;
+
+            background: var(--black);
+
+            padding: 28px 18px;
+
+            display: flex;
+            flex-direction: column;
+
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 0 10px;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 11px;
+
+            background: var(--red);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: white;
+            font-weight: 800;
+            font-family: "Plus Jakarta Sans";
+        }
+
+        .brand-text {
+            color: white;
+            font-family: "Plus Jakarta Sans";
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .brand-text span {
+            color: var(--red);
+        }
+
+        .menu-title {
+            color: #67676d;
+            font-size: 11px;
+            font-weight: 700;
+
+            text-transform: uppercase;
+            letter-spacing: 1px;
+
+            padding: 0 12px;
+            margin-bottom: 10px;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            padding: 12px 13px;
+
+            border-radius: 10px;
+
+            color: #aaaab0;
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: 500;
+
+            transition: .2s;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: var(--black-3);
+            color: white;
+        }
+
+        .menu a.active {
+            box-shadow: inset 3px 0 0 var(--red);
+        }
+
+        .menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+
+            border-top: 1px solid #252529;
+
+            padding: 18px 10px 0;
+
+            color: #67676d;
+            font-size: 12px;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .main {
+            margin-left: var(--sidebar);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
+
+        .hero {
+            position: relative;
+
+            overflow: hidden;
+
+            background:
+                radial-gradient(
+                    circle at 90% 10%,
+                    rgba(229, 9, 20, .30),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #101014,
+                    #1a1a1f
+                );
+
+            border-radius: 22px;
+
+            padding: 42px;
+
+            color: white;
+
+            margin-bottom: 25px;
+        }
+
+        .hero::after {
+            content: "";
+
+            position: absolute;
+
+            width: 220px;
+            height: 220px;
+
+            border-radius: 50%;
+
+            background: rgba(229, 9, 20, .08);
+
+            right: -70px;
+            bottom: -100px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+
+            max-width: 700px;
+        }
+
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            background: rgba(229, 9, 20, .12);
+
+            color: #ff6870;
+
+            border: 1px solid rgba(229, 9, 20, .25);
+
+            padding: 7px 11px;
+
+            border-radius: 999px;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            margin-bottom: 18px;
+        }
+
+        .hero-label span {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #36d67a;
+        }
+
+        .hero h1 {
+            font-family: "Plus Jakarta Sans";
+
+            font-size: 34px;
+            line-height: 1.15;
+
+            margin-bottom: 12px;
+        }
+
+        .hero h1 span {
+            color: var(--red);
+        }
+
+        .hero p {
+            color: #a6a6ad;
+
+            line-height: 1.7;
+
+            font-size: 15px;
+        }
+
+        /* =========================
+           STATS
+        ========================= */
+
+        .stats {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 18px;
+
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 23px;
+
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+
+            border-radius: 13px;
+
+            background: var(--red-soft);
+
+            color: var(--red);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 800;
+        }
+
+        .stat-info span {
+            display: block;
+
+            font-size: 12px;
+
+            color: var(--muted);
+
+            margin-bottom: 4px;
+        }
+
+        .stat-info strong {
+            font-family: "Plus Jakarta Sans";
+
+            font-size: 23px;
+        }
+
+        /* =========================
+           SECTIONS
+        ========================= */
+
+        .section {
+            margin-bottom: 40px;
+            scroll-margin-top: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: "Plus Jakarta Sans";
+
+            font-size: 21px;
+            font-weight: 800;
+
+            margin-bottom: 5px;
+        }
+
+        .section-description {
+            color: var(--muted);
+
+            font-size: 14px;
+        }
+
+        /* =========================
+           PROCESSAMENTO PDF
+        ========================= */
+
+        .process-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 25px;
+        }
+
+        .process-card-content {
+            display: flex;
+            align-items: center;
+
+            gap: 17px;
+        }
+
+        .process-icon {
+            width: 54px;
+            height: 54px;
+
+            flex-shrink: 0;
+
+            background: var(--red-soft);
+
+            color: var(--red);
+
+            border-radius: 14px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .process-card h3 {
+            font-family: "Plus Jakarta Sans";
+
+            font-size: 16px;
+
+            margin-bottom: 6px;
+        }
+
+        .process-card p {
+            color: var(--muted);
+
+            font-size: 13px;
+
+            line-height: 1.6;
+
+            max-width: 700px;
+        }
+
+        .process-button {
+            border: none;
+
+            background: var(--red);
+
+            color: white;
+
+            padding: 12px 18px;
+
+            border-radius: 10px;
+
+            font-family: inherit;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: .2s;
+
+            white-space: nowrap;
+        }
+
+        .process-button:hover {
+            background: var(--red-dark);
+            transform: translateY(-1px);
+        }
+
+        .process-button.dark {
+            background: var(--black);
+        }
+
+        .process-button.dark:hover {
+            background: #29292d;
+        }
+
+        /* =========================
+           AI
+        ========================= */
+
+        .ai-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 25px;
+        }
+
+        .ai-card-header {
+            display: flex;
+            align-items: center;
+
+            gap: 13px;
+
+            margin-bottom: 17px;
+        }
+
+        .ai-icon {
+            width: 45px;
+            height: 45px;
+
+            border-radius: 12px;
+
+            background: var(--black);
+
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 20px;
+        }
+
+        .ai-card-header h3 {
+            font-family: "Plus Jakarta Sans";
+
+            font-size: 16px;
+
+            margin-bottom: 3px;
+        }
+
+        .ai-card-header span {
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+        .ai-description {
+            color: var(--muted);
+
+            font-size: 14px;
+
+            margin-bottom: 18px;
+        }
+
+        .command-examples {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-bottom: 15px;
+        }
+
+        .command-example {
+            border: 1px solid var(--border);
+
+            background: #fafafa;
+
+            color: #555;
+
+            border-radius: 999px;
+
+            padding: 8px 12px;
+
+            font-family: inherit;
+
+            font-size: 12px;
+
+            cursor: pointer;
+
+            transition: .2s;
+        }
+
+        .command-example:hover {
+            border-color: var(--red);
+
+            color: var(--red);
+
+            background: var(--red-soft);
+        }
+
+        .command-input {
+            width: 100%;
+
+            min-height: 120px;
+
+            resize: vertical;
+
+            border: 1px solid var(--border);
+
+            border-radius: 12px;
+
+            padding: 15px;
+
+            font-family: inherit;
+
+            font-size: 14px;
+
+            outline: none;
+
+            transition: .2s;
+        }
+
+        .command-input:focus {
+            border-color: var(--red);
+
+            box-shadow:
+                0 0 0 3px rgba(229, 9, 20, .08);
+        }
+
+        .ai-footer {
+            margin-top: 15px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 15px;
+        }
+
+        .ai-status {
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #28c76f;
+        }
+
+        .ai-command-button {
+            border: none;
+
+            background: var(--black);
+
+            color: white;
+
+            padding: 11px 18px;
+
+            border-radius: 10px;
+
+            font-family: inherit;
+
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .ai-command-button:hover {
+            background: #29292d;
+        }
+
+        /* =========================
+           SEARCH
+        ========================= */
+
+        .search-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 22px;
+        }
+
+        .search-form {
+            display: flex;
+
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+
+            height: 45px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 10px;
+
+            padding: 0 14px;
+
+            outline: none;
+
+            font-family: inherit;
+
+            font-size: 14px;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--red);
+
+            box-shadow:
+                0 0 0 3px rgba(229, 9, 20, .08);
+        }
+
+        .search-button {
+            border: none;
+
+            background: var(--black);
+
+            color: white;
+
+            border-radius: 10px;
+
+            padding: 0 20px;
+
+            font-family: inherit;
+
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .search-button:hover {
+            background: #29292d;
+        }
+
+        /* =========================
+           SELLERS
+        ========================= */
+
+        .seller-list {
+            margin-top: 15px;
+
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            overflow: hidden;
+        }
+
+        .seller-row {
+            display: grid;
+
+            grid-template-columns:
+                2fr
+                1fr
+                1fr
+                1fr
+                1fr;
+
+            align-items: center;
+
+            gap: 20px;
+
+            padding: 17px 20px;
+
+            border-bottom: 1px solid var(--border);
+        }
+
+        .seller-row:last-child {
+            border-bottom: none;
+        }
+
+        .seller-main {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+        .seller-avatar {
+            width: 40px;
+            height: 40px;
+
+            border-radius: 11px;
+
+            background: var(--black);
+
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .seller-name {
+            font-weight: 700;
+
+            font-size: 14px;
+
+            margin-bottom: 3px;
+        }
+
+        .seller-id {
+            color: var(--muted);
+
+            font-size: 11px;
+        }
+
+        .seller-field span {
+            display: block;
+
+            color: var(--muted);
+
+            font-size: 11px;
+
+            margin-bottom: 4px;
+        }
+
+        .seller-field strong {
+            font-size: 13px;
+        }
+
+        .seller-field .bonus {
+            color: #1a9c52;
+        }
+
+        .empty-state {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 35px;
+
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 14px;
+        }
+
+        /* =========================
+           DOCUMENTOS
+        ========================= */
+
+        .documents-card {
+            background: white;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 25px;
+        }
+
+        .upload-form {
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+        .upload-form input[type="file"] {
+            flex: 1;
+
+            border: 1px dashed #cfcfd3;
+
+            border-radius: 10px;
+
+            padding: 11px;
+
+            font-family: inherit;
+
+            font-size: 13px;
+
+            background: #fafafa;
+        }
+
+        .upload-button {
+            border: none;
+
+            background: var(--red);
+
+            color: white;
+
+            padding: 12px 18px;
+
+            border-radius: 10px;
+
+            font-family: inherit;
+
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .upload-button:hover {
+            background: var(--red-dark);
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 1100px) {
+
+            .seller-row {
+                grid-template-columns:
+                    2fr
+                    1fr
+                    1fr;
+            }
+
+            .seller-field:nth-child(4),
+            .seller-field:nth-child(5) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 850px) {
+
+            :root {
+                --sidebar: 0px;
+            }
+
+            .sidebar {
+                position: relative;
+
+                width: 100%;
+                height: auto;
+
+                padding: 15px;
+            }
+
+            .brand {
+                margin-bottom: 15px;
+            }
+
+            .menu {
+                flex-direction: row;
+
+                overflow-x: auto;
+            }
+
+            .menu-title,
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .menu a {
+                white-space: nowrap;
+            }
+
+            .main {
+                margin-left: 0;
+
+                padding: 20px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 28px;
+            }
+
+            .hero h1 {
+                font-size: 27px;
+            }
+
+            .process-card {
+                align-items: flex-start;
+
+                flex-direction: column;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-button {
+                height: 45px;
+            }
+
+            .upload-form {
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+            .seller-row {
+                grid-template-columns: 1fr;
+            }
+
+            .seller-field:nth-child(4),
+            .seller-field:nth-child(5) {
+                display: block;
+            }
+        }
+
+        @media (max-width: 550px) {
+
+            .main {
+                padding: 14px;
+            }
+
+            .hero {
+                padding: 24px;
+            }
+
+            .hero h1 {
+                font-size: 24px;
+            }
+
+            .ai-footer {
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+            .ai-command-button {
+                width: 100%;
+            }
+
+            .process-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+         SIDEBAR
+    ========================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                M
+            </div>
+
+            <div class="brand-text">
+                Moto<span>mar</span>
+            </div>
+
+        </div>
+
+        <div class="menu-title">
+            Menu
+        </div>
+
+        <nav class="menu">
+
+            <a href="#dashboard" class="active">
+                <span class="menu-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="/cadastro">
+                <span class="menu-icon">＋</span>
+                Novo vendedor
+            </a>
+
+            <a href="#vendedores">
+                <span class="menu-icon">♙</span>
+                Vendedores
+            </a>
+
+            <a href="#processamento">
+                <span class="menu-icon">▣</span>
+                Processar dados
+            </a>
+
+            <a href="#ia">
+                <span class="menu-icon">✦</span>
+                Assistente IA
+            </a>
+
+            <a href="#buscar">
+                <span class="menu-icon">⌕</span>
+                Consultar
+            </a>
+
+            <a href="#documentos">
+                <span class="menu-icon">▤</span>
+                Documentos
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            Motomar · Sistema interno
+        </div>
+
+    </aside>
+
+
+    <!-- =========================
+         MAIN
+    ========================= -->
+
+    <main class="main">
+
+        <div class="container">
+
+
+            <!-- =========================
+                 DASHBOARD
+            ========================= -->
+
+            <section class="section" id="dashboard">
+
+                <div class="hero">
+
+                    <div class="hero-content">
+
+                        <div class="hero-label">
+                            <span></span>
+                            Sistema operacional
+                        </div>
+
+                        <h1>
+                            Gestão de vendedores
+                            <span>Motomar</span>
+                        </h1>
+
+                        <p>
+                            Gerencie vendedores, metas, vendas e
+                            bonificações em um único ambiente.
+                            Utilize as ferramentas de IA para
+                            automatizar o processamento dos dados.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STATS -->
+
+                <div class="stats">
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon">
+                            US
+                        </div>
+
+                        <div class="stat-info">
+
+                            <span>
+                                Vendedores cadastrados
+                            </span>
+
+                            <strong>
+                                {{ vendedores|length if vendedores else 0 }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon">
+                            IA
+                        </div>
+
+                        <div class="stat-info">
+
+                            <span>
+                                Processamento inteligente
+                            </span>
+
+                            <strong>
+                                Ativo
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <div class="stat-icon">
+                            PDF
+                        </div>
+
+                        <div class="stat-info">
+
+                            <span>
+                                Relatórios
+                            </span>
+
+                            <strong>
+                                PDF
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =========================
+     ASSISTENTE IA
+========================= -->
+<section class="section" id="ia">
+
+    <div class="section-header">
+        <div>
+            <div class="section-title">
+                Assistente IA
+            </div>
+
+            <div class="section-description">
+                Consulte e gerencie os vendedores utilizando linguagem natural.
+            </div>
+        </div>
+    </div>
+
+
+    <div class="ai-card">
+
+        <div class="ai-card-header">
+
+            <div class="ai-icon">
+                ✦
+            </div>
+
+            <div>
+                <h3>
+                    Assistente de operações
+                </h3>
+
+                <span>
+                    Inteligência artificial
+                </span>
+            </div>
+
+        </div>
+
+
+        <p class="ai-description">
+            Digite um comando para consultar ou gerenciar
+            os vendedores cadastrados no sistema.
+        </p>
+
+
+        <!-- COMANDOS RÁPIDOS -->
+
+        <div class="command-examples">
+
+            <button
+                type="button"
+                class="command-example"
+                onclick="setCommand('Mostre todos os vendedores')"
+            >
+                Mostrar vendedores
+            </button>
+
+
+            <button
+                type="button"
+                class="command-example"
+                onclick="setCommand('Busque o vendedor Aldair Ferreira da Silva')"
+            >
+                Buscar vendedor
+            </button>
+
+
+            <button
+                type="button"
+                class="command-example"
+                onclick="setCommand('Mostre os vendedores que atingiram a meta')"
+            >
+                Ver metas
+            </button>
+
+        </div>
+
+
+        <!-- FORM DA IA -->
+
+        <form action="/llm" method="POST">
+
+            <textarea
+                id="comando"
+                name="comando"
+                class="command-input"
+                placeholder="Digite um comando para a IA..."
+                required
+            ></textarea>
+
+
+            <div class="ai-footer">
+
+                <div class="ai-status">
+
+                    <span class="status-dot"></span>
+
+                    Assistente conectado
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="ai-command-button"
+                >
+                    Executar comando
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <!-- =========================
+             RESPOSTA DA IA
+        ========================= -->
+
+        {% if resultado %}
+
+        <div class="ai-result">
+
+            <div class="ai-result-header">
+
+                <div class="ai-result-icon">
+                    ✦
+                </div>
+
+                <div>
+                    <strong>Resposta da IA</strong>
+
+                    <span>
+                        Resultado do comando
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="ai-result-content">
+                {{ resultado }}
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+    </div>
+
+</section>
+
+
+            <!-- =========================
+                 BUSCAR VENDEDORES
+            ========================= -->
+
+            <section class="section" id="buscar">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <div class="section-title">
+                            Consultar vendedores
+                        </div>
+
+                        <div class="section-description">
+                            Pesquise um vendedor específico ou utilize "all" para listar todos.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="search-card">
+
+                    <form
+                        action="/buscar"
+                        method="POST"
+                        class="search-form"
+                    >
+
+                        <div class="input-wrapper">
+
+                            <input
+                                type="text"
+                                name="nome"
+                                placeholder="Digite um nome ou 'all'"
+                                required
+                            >
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="search-button"
+                        >
+                            Buscar vendedor
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- RESULTADOS -->
+
+                {% if vendedores %}
+
+                <div class="seller-list">
+
+                    {% for vendedor in vendedores %}
+
+                    <div class="seller-row">
+
+                        <div class="seller-main">
+
+                            <div class="seller-avatar">
+                                {{ vendedor.nome[:2]|upper }}
+                            </div>
+
+                            <div>
+
+                                <div class="seller-name">
+                                    {{ vendedor.nome }}
+                                </div>
+
+                                <div class="seller-id">
+                                    ID: {{ vendedor.id }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="seller-field">
+
+                            <span>
+                                Tipo
+                            </span>
+
+                            <strong>
+                                {{ vendedor.tipo|default('Não informado') }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="seller-field">
+
+                            <span>
+                                Meta
+                            </span>
+
+                            <strong>
+                                {{ vendedor.meta }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="seller-field">
+
+                            <span>
+                                Motos
+                            </span>
+
+                            <strong>
+                                {{ vendedor.motos }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="seller-field">
+
+                            <span>
+                                Bônus
+                            </span>
+
+                            <strong class="bonus">
+                                R$ {{ vendedor.bonus|default(0) }}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <div class="empty-state">
+
+                    Nenhum vendedor encontrado.
+                    Utilize o campo acima para realizar uma consulta.
+
+                </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <!-- =========================
+                 DOCUMENTOS
+            ========================= -->
+
+            <section class="section" id="documentos">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <div class="section-title">
+                            Documentos
+                        </div>
+
+                        <div class="section-description">
+                            Envie relatórios PDF para o sistema.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="documents-card">
+
+                    <form
+                        action="/upload-pdf"
+                        method="POST"
+                        enctype="multipart/form-data"
+                        class="upload-form"
+                    >
+
+                        <input
+                            type="file"
+                            name="arquivo"
+                            accept=".pdf"
+                            required
+                        >
+
+
+                        <button
+                            type="submit"
+                            class="upload-button"
+                        >
+                            Enviar
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+        </div>
+        <!-- =========================
+                 PROCESSAMENTO PDF
+            ========================= -->
+
+            <section class="section" id="processamento">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <div class="section-title">
+                            Processamento de dados
+                        </div>
+
+                        <div class="section-description">
+                            Leia os relatórios PDF e atualize os dados dos vendedores.
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="process-card">
+
+                    <div class="process-card-content">
+
+                        <div class="process-icon">
+                            PDF
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Processar relatórios
+                            </h3>
+
+                            <p>
+                                A IA irá analisar os relatórios PDF,
+                                identificar os vendedores, quantidade de
+                                motos, formas de pagamento e atualizar
+                                os dados no banco de dados.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ÚNICO BOTÃO DE PROCESSAMENTO -->
+
+                    <form action="/processar-pdfs" method="POST">
+
+                        <button
+                            type="submit"
+                            class="process-button"
+                        >
+                            Processar PDFs
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+    </main>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================= -->
+
+    <script>
+
+        function setCommand(command) {
+
+            const textarea =
+                document.getElementById("comando");
+
+            if (textarea) {
+
+                textarea.value = command;
+
+                textarea.focus();
+
+            }
+
+        }
+
+
+        /*
+         * Marca o item do menu conforme
+         * a seção atualmente visualizada.
+         */
+
+        const sections =
+            document.querySelectorAll(".section");
+
+        const menuLinks =
+            document.querySelectorAll(
+                '.menu a[href^="#"]'
+            );
+
+
+        window.addEventListener("scroll", () => {
+
+            let current = "";
+
+            sections.forEach(section => {
+
+                const sectionTop =
+                    section.offsetTop - 120;
+
+                if (
+                    window.scrollY >= sectionTop
+                ) {
+                    current = section.getAttribute("id");
+                }
+
+            });
+
+
+            menuLinks.forEach(link => {
+
+                link.classList.remove("active");
+
+                if (
+                    link.getAttribute("href") ===
+                    "#" + current
+                ) {
+
+                    link.classList.add("active");
+
+                }
+
+            });
+
+        });
+
+
+        /*
+         * Scroll suave ao clicar no menu.
+         */
+
+        menuLinks.forEach(link => {
+
+            link.addEventListener("click", function (event) {
+
+                const targetId =
+                    this.getAttribute("href");
+
+                const target =
+                    document.querySelector(targetId);
+
+                if (target) {
+
+                    event.preventDefault();
+
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+
+                }
+
+            });
+
+        });
+
+    </script>
+
+</body>
+
+</html>

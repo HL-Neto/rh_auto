@@ -53,21 +53,25 @@ def txtRead():
         
 
 
-def add_user(nome:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
+def add_user(nome:str , tipo:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
     
     db = firestore.client()
+    
+    bonus = calc( meta , motos , pops , vendas_card, vendas_other)
     
     data ={
         
         "nome":nome,
+        "tipo":tipo,
         "meta":meta,
         "motos":motos,
         "pops":pops,
         "vendas_card": vendas_card,
-        "vendas_other":vendas_other
+        "vendas_other":vendas_other, 
+        "bonus": bonus
     }
     
-    doc_ref = db.collection ("vendedores").add(data)
+    db.collection ("vendedores").add(data)
 
     return
 
@@ -150,10 +154,12 @@ def get_user(nome:str):
     return vendedores
 
 
-def calc(meta:int , vendas: int, vendas_card: int, vendas_other: int) -> int:
+def calc(meta: int, motos: int, pops: int, vendas_card: int, vendas_other: int) -> int:
     
     """Calcula o bônus do vendedor quando a quantidade de vendas ultrapassa a meta."""
-    if vendas >= meta :
+    
+    
+    if motos >= meta :
         
         vendas_card_bonus = vendas_card * 15
         vendas_other_bonus = vendas_other * 30
@@ -166,7 +172,7 @@ def calc(meta:int , vendas: int, vendas_card: int, vendas_other: int) -> int:
     return 0
 
 
-    
+
     
     
             

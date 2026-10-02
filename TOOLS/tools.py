@@ -1,5 +1,5 @@
 from langchain_core.tools import tool
-from MODULLES.module import get_user, add_user, edit_user , calc
+from MODULLES.module import get_user, add_user, edit_user , calc , pdfRead
               
 
 @tool
@@ -17,12 +17,20 @@ def get_userTool():
     return get_user("all")
 
 @tool 
-def add_UserTool(nome:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
+def add_UserTool(nome:str ,  tipo:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
     """Adiciona um novo vendedor ao banco de dados."""
     
-    return add_user(nome, meta, motos, pops, vendas_card, vendas_other)
+    return add_user(nome, tipo , meta, motos, pops, vendas_card, vendas_other)
 
 @tool 
 def edit_Usertool(nome:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
     """ Edita um usário dentro do banco de dados"""
     return edit_user(nome, meta, motos, pops, vendas_card, vendas_other)
+
+
+@tool
+def pdf_Reader():
+    """lê os dados do pdf"""
+    return pdfRead()
+    
+    
