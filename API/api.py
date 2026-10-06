@@ -1,217 +1,152 @@
 import os
 
-from flask import Flask, request, render_template
+from flask           import Flask, request, render_template, redirect, url_for
+from MODULLES.module import ( add_user, delet_user, get_user, edit_user ) 
+from LLM.llm         import ( llm_process, command_process )
 
-from MODULLES.module import (
-    add_user,
-    delet_user,
-    get_user,
-    pdfRead,
-    edit_user,
-    calc
-)
 
-from LLM.llm import (
-    llm_process,
-    command_process
+"procura uma pasta usando como referencia a pasta principal"
+BASE_DIR = os.path.dirname( os.path.dirname( os.path.abspath(__file__)))
+
+"procura a pasta do front"
+app = Flask( __name__, template_folder=os.path.join(BASE_DIR, "FRONT")
 )
 
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.abspath(__file__)
-    )
-)
 
 
-app = Flask(
-    __name__,
-    template_folder=os.path.join(BASE_DIR, "FRONT")
-)
 
+"// ROTAS //"
 
+"define a rota principal"
 @app.route("/")
 def index():
 
-    vendedores = get_user("all")
+    return render_template("index.html",)
 
-    return render_template(
-        "index.html",
-        vendedores=vendedores
-    )
-
+"rota do  formulário de cadastro"
 @app.route("/cadastro")
 def cadastro():
 
-    return render_template(
-        "cadastro.html"
-    )
+    return render_template("cadastro.html")
 
 
+
+"// API //"
+
+
+
+
+
+"CADASTRO"
 @app.route("/cadastrar", methods=["POST"])
 def add():
-
-    nome = request.form.get("nome")
-    tipo = request.form.get("tipo")
-
-    meta = int(request.form.get("meta"))
+    
+    
+    "pegas os dados do formulário"
+    nome  = request.form.get("nome")
+    tipo  = request.form.get("tipo")
+    meta  = int(request.form.get("meta"))
     motos = int(request.form.get("motos"))
-    pops = int(request.form.get("pops"))
+    pops  = int(request.form.get("pops"))
+    vendas_card  = int(request.form.get("vendas_card"))
+    vendas_other = int(request.form.get("vendas_other"))
 
-    vendas_card = int(
-        request.form.get("vendas_card")
-    )
-
-    vendas_other = int(
-        request.form.get("vendas_other")
-    )
-
-    add_user(
-        nome,
-        tipo,
-        meta,
-        motos,
-        pops,
-        vendas_card,
-        vendas_other
-    )
-
-    vendedores = get_user("all")
-
-    return render_template(
-        "index.html",
-        vendedores=vendedores
-    )
+    "manda para a função no module"
+    add_user(nome, tipo, meta,motos, pops, vendas_card, vendas_other)
+    
+    "busca o vendedor que a gente acabou de add"
+    vendedor = get_user(nome)
+                        
+    "retorna pro template e mostra o vendedor na barra de pesquisa"
+    return render_template("index.html", vendedores = vendedor )
 
 
-# ============================================================
-# DELETAR
-# ============================================================
-
-@app.route("/deletar", methods=["POST"])
-def delete():
-
-    nome = request.form.get("nome")
-
-    delet_user(nome)
-
-    vendedores = get_user("all")
-
-    return render_template(
-        "index.html",
-        vendedores=vendedores
-    )
 
 
-# ============================================================
-# EDITAR
-# ============================================================
 
-@app.route("/editar", methods=["POST"])
-def edit():
-
-    nome = request.form.get("nome")
-
-    meta = request.form.get("meta")
-    motos = request.form.get("motos")
-    pops = request.form.get("pops")
-
-    vendas_card = request.form.get(
-        "vendas_card"
-    )
-
-    vendas_other = request.form.get(
-        "vendas_other"
-    )
-
-    edit_user(
-        nome,
-        meta,
-        motos,
-        pops,
-        vendas_card,
-        vendas_other
-    )
-
-    vendedores = get_user("all")
-
-    return render_template(
-        "index.html",
-        vendedores=vendedores
-    )
-
-
-# ============================================================
-# BUSCAR
-# ============================================================
-
+"BUSCA"
 @app.route("/buscar", methods=["POST"])
 def get():
 
-    nome = request.form.get("nome")
+    "recebe o nome do formulário e manda para a função no modulo"
+    nome       = request.form.get("nome")
+    vendedor  = get_user(nome)
 
-    vendedores = get_user(nome)
-
-    return render_template(
-        "index.html",
-        vendedores=vendedores
-    )
+    return render_template("index.html", vendedores = vendedor)
 
 
-# ============================================================
-# PROCESSAR PDFs
-# ============================================================
 
+
+
+
+"PROCESSAR PDF"
 @app.route("/processar-pdfs", methods=["POST"])
 def processar_pdfs():
 
-    print("\n==============================")
-    print("PROCESSANDO PDFs")
-    print("==============================")
-
-    resultado = llm_process()
-
+    
+    "ativa a llm"
+    llm_process()
+    "mostra os cendedores adicionados"
     vendedores = get_user("all")
 
-    return render_template(
-        "index.html",
-        vendedores=vendedores,
-        resultado=resultado
-    )
+    return render_template("index.html", vendedores=vendedores)
 
 
-# ============================================================
-# IA DE COMANDOS
-# ============================================================
 
+
+
+"MANDAR OS PDFS PARA O ARQUIVO PDF"
+@app.route("/upload-pdf", methods=["POST"])
+def upload_pdf():
+
+    "acha a pasta pdf"
+    PDF_DIR = os.path.join(BASE_DIR, "PDF")
+
+    "verifica se existe , se n existir ele cria"
+    os.makedirs(PDF_DIR, exist_ok=True)
+
+    "recebe os arquivos do front"
+    arquivos = request.files.getlist("arquivos")
+    
+    "para cada arquivo"
+    for arquivo in arquivos:
+
+    
+        "verifica se ta vazio"
+        if not arquivo or not arquivo.filename:
+            continue
+        "verifica se é um pdf"
+        if not arquivo.filename.lower().endswith(".pdf"):
+            continue
+        
+        "manda o arquivo para pasta PDF"
+        caminho = os.path.join(PDF_DIR, arquivo.filename)
+        arquivo.save(caminho)
+
+
+    return render_template("index.html")
+
+
+
+"LLM"
 @app.route("/llm", methods=["POST"])
 def ia():
 
-    context = request.form.get(
-        "comando",
-        ""
-    ).strip()
+    "menssagem do usuário"
+    context = request.form.get("comando","").strip()
 
-    print("\n==============================")
-    print("COMANDO RECEBIDO PELA API")
-    print("==============================")
-
-    print(context)
-
+    "resposta da llms"
     resultado = command_process(context)
 
+    "mostra todos os vendedores para confirmar as auterações feitas"
     vendedores = get_user("all")
 
-    return render_template(
-        "index.html",
-        vendedores=vendedores,
-        resultado=resultado
-    )
+    return render_template("index.html", vendedores=vendedores, resultado=resultado)
 
 
-# ============================================================
-# MAIN
-# ============================================================
+
+
 
 if __name__ == "__main__":
 

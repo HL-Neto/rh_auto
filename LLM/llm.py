@@ -3,104 +3,102 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 
-from TOOLS.tools import (
-    add_UserTool,
-    get_userTool,
-    edit_Usertool,
-    pdf_Reader
-)
+from TOOLS.tools import (add_UserTool, get_userTool, edit_Usertool, pdf_Reader, delete_Usertool)
 
 load_dotenv()
 
+"""
+    AS LLMS ULTILIZADAS
+    basicamente temos duas llms , uma para o processessamento dos dados dentro do pdf , e a outra para auxilio do usuário
+    ambos pussem a capacidade de alterar o banco de dados, cada um com suas limmitações
 
-# ============================================================
-# IA PARA PROCESSAR OS PDFs
-# ============================================================
+"""
 
 def llm_process():
 
-    print("\n==============================")
-    print("INICIANDO IA DOS PDFs")
-    print("==============================")
+
 
     model = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash-lite"
     )
 
     prompt = """
-Você é responsável por processar os dados de vendas dos vendedores.
+    
+        Você é responsável por processar os dados de vendas dos vendedores.
 
-OBJETIVO
+        OBJETIVO
 
-1 - Utilize a ferramenta 'pdf_Reader' para buscar nos PDFs:
-    - lista de vendedores
-    - motos vendidas
-    - quantidade de POPs
-    - tipo de vendas
-    - vendas no cartão
-    - vendas em outras formas de pagamento
+        1 - Utilize a ferramenta 'pdf_Reader' para buscar nos PDFs:
+            - lista de vendedores
+            - motos vendidas
+            - quantidade de POPs
+            - tipo de vendas
+            - vendas no cartão
+            - vendas em outras formas de pagamento
 
-2 - Calcule corretamente:
-    - quantidade total de motos vendidas
-    - quantidade de POPs
-    - vendas no cartão
-    - vendas em outras formas
+        2 - Calcule corretamente:
+            - quantidade total de motos vendidas
+            - quantidade de POPs
+            - vendas no cartão
+            - vendas em outras formas
 
-IMPORTANTE:
+        IMPORTANTE:
 
-Se um vendedor possui 10 motos vendidas e 2 foram no cartão,
-obrigatoriamente as outras vendas serão 8.
+        Se um vendedor possui 10 motos vendidas e 2 foram no cartão,
+        obrigatoriamente as outras vendas serão 8.
 
-Portanto:
+        Portanto:
 
-vendas_card + vendas_other = motos
+        vendas_card + vendas_other = motos
 
-3 - Depois de extrair os dados dos PDFs, utilize a ferramenta
-'add_UserTool' para cadastrar os vendedores.
+        3 - Depois de extrair os dados dos PDFs, utilize a ferramenta
+        'add_UserTool' para cadastrar os vendedores.
 
-4 - NÃO invente informações.
+        4 - NÃO invente informações.
 
-5 - Só cadastre vendedores que possuam uma meta na lista abaixo.
+        5 - Só cadastre vendedores que possuam uma meta na lista abaixo.
 
-6 - Compare os nomes ignorando diferenças entre letras maiúsculas,
-minúsculas e acentos quando necessário.
+        6 - Compare os nomes ignorando diferenças entre letras maiúsculas,
+        minúsculas e acentos quando necessário.
 
-7 - Depois dos cadastros, utilize 'get_userTool' para consultar
-todos os vendedores cadastrados.
+        7 - Depois dos cadastros, utilize 'get_userTool' para consultar
+        todos os vendedores cadastrados.
 
-VENDEDORES E METAS
+        8 - exitem 3 tipos de vendedores , externos , internos , online
 
-ALDAIR FERREIRA DA SILVA - 35
-ALISSON VELOSO DA SILVA - 10
-ANA KALYNE DA MATA - 15
-ANDREZA ALMEIDA DA SILVA - 55
-ARYLENNE ALVES DA COSTA - 35
-CARLOS EDUARDO SILVA DOS SANTOS - 7
-CLEONDES GEFFERSON FARIAS FERREIRA - 8
-ELIONAI ANDERSON ELEUTERIO DE AQUINO - 20
-HELLITON RODRIGUES DE ALENCAR - 10
-JEFERSON CALDAS FELIPE DE FREITAS - 10
-JOSE ELTON DO NASCIMENTO TEODOSIO - 30
-JOSE ROBERTO DA SILVA - 16
-KAREN JOSSANY RODRIGUES DO CARMO - 15
-LAIS MENDONÇA AMORIM - 6
-LEONARDO JOSE DA SILVA - 35
-LUCAS ALBINO RIBEIRO - 7
-LUCAS DE SOUZA DIAS - 4
-LUIZ ANDRE FELINTO DA SILVA - 6
-MARCIO DIAS DE ANDRADE - 8
-MARCIO RUBENS FERREIRA DA SILVA - 6
-MARCOS ANTONIO DOS SANTOS - 16
-NICHOLLAS DEVID DE LIMA PONTES - 6
-OTHAVIO AUGUSTO LEOCADIO SOUZA - 35
-RENATA COSTA DA SILVA DOS SANTOS - 5
-RHUANN CARLOS MARINHO DOS SANTOS - 8
-SANDRA FERNANDES DOS SANTOS - 55
-THIAGO IRINEU PESSOA - 8
-VINICIUS BARBOSA DA SILVA - 8
-VINICIUS GABRIEL DA SILVA - 8
-WILSON ARAUJO DE OLIVEIRA - 10
-"""
+
+        ALDAIR FERREIRA DA SILVA - 35 
+        ALISSON VELOSO DA SILVA - 10 
+        ANA KALYNE DA MATA - 15
+        ANDREZA ALMEIDA DA SILVA - 55
+        ARYLENNE ALVES DA COSTA - 35
+        CARLOS EDUARDO SILVA DOS SANTOS - 7
+        CLEONDES GEFFERSON FARIAS FERREIRA - 8
+        ELIONAI ANDERSON ELEUTERIO DE AQUINO - 20
+        HELLITON RODRIGUES DE ALENCAR - 10
+        JEFERSON CALDAS FELIPE DE FREITAS - 10
+        JOSE ELTON DO NASCIMENTO TEODOSIO - 30
+        JOSE ROBERTO DA SILVA - 16
+        KAREN JOSSANY RODRIGUES DO CARMO - 15
+        LAIS MENDONÇA AMORIM - 6
+        LEONARDO JOSE DA SILVA - 35
+        LUCAS ALBINO RIBEIRO - 7
+        LUCAS DE SOUZA DIAS - 4
+        LUIZ ANDRE FELINTO DA SILVA - 6
+        MARCIO DIAS DE ANDRADE - 8
+        MARCIO RUBENS FERREIRA DA SILVA - 6
+        MARCOS ANTONIO DOS SANTOS - 16
+        NICHOLLAS DEVID DE LIMA PONTES - 6
+        OTHAVIO AUGUSTO LEOCADIO SOUZA - 35
+        RENATA COSTA DA SILVA DOS SANTOS - 5
+        RHUANN CARLOS MARINHO DOS SANTOS - 8
+        SANDRA FERNANDES DOS SANTOS - 55
+        THIAGO IRINEU PESSOA - 8
+        VINICIUS BARBOSA DA SILVA - 8
+        VINICIUS GABRIEL DA SILVA - 8
+        WILSON ARAUJO DE OLIVEIRA - 10
+    
+    """
 
     print("\n[1] Prompt dos PDFs criado")
 
@@ -109,7 +107,7 @@ WILSON ARAUJO DE OLIVEIRA - 10
         tools=[
             add_UserTool,
             get_userTool,
-            pdf_Reader
+            pdf_Reader,
         ]
     )
 
@@ -126,7 +124,8 @@ WILSON ARAUJO DE OLIVEIRA - 10
     })
 
     content = answer["messages"][-1].content
-
+    
+    " formatação da resposta da llm"
     if isinstance(content, list):
         content = "".join(
             item.get("text", "")
@@ -134,11 +133,7 @@ WILSON ARAUJO DE OLIVEIRA - 10
             else str(item)
             for item in content
         )
-
-    print("\n==============================")
-    print("RESPOSTA FINAL DA IA DOS PDFs")
-    print("==============================")
-    print(content)
+        
 
     return str(content)
 
@@ -149,63 +144,67 @@ WILSON ARAUJO DE OLIVEIRA - 10
 
 def command_process(context: str):
 
-    print("\n==============================")
-    print("INICIANDO IA DE COMANDOS")
-    print("==============================")
-
+  
     model = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash-lite"
     )
 
     prompt = f"""
-Você é uma IA responsável pelo gerenciamento dos vendedores
-armazenados no banco de dados.
+        
+        Você é uma IA responsável pelo gerenciamento dos vendedores
+        armazenados no banco de dados.
 
-Você só pode executar comandos relacionados ao banco de dados
-de vendedores.
+        Você só pode executar comandos relacionados ao banco de dados
+        de vendedores.
 
-Ações permitidas:
+        Ações permitidas:
 
-1. CRIAR
-2. DELETAR
-3. EDITAR
-4. CONSULTAR
+        1. CRIAR
+        2. DELETAR
+        3. EDITAR
+        4. CONSULTAR
 
-Você possui as seguintes ferramentas:
 
-- add_UserTool
-- get_userTool
-- edit_Usertool
+        Você possui as seguintes ferramentas:
 
-NÃO utilize ferramentas relacionadas aos PDFs.
+        - add_UserTool
+        - get_userTool
+        - edit_Usertool
+        - delete_userTool
 
-NÃO invente dados.
+        NÃO utilize ferramentas relacionadas aos PDFs.
 
-Se o usuário pedir para criar um vendedor, utilize
-add_UserTool somente se todas as informações necessárias
-estiverem disponíveis.
+        NÃO invente dados.
 
-Se o usuário pedir para consultar vendedores, utilize
-get_userTool.
+        Se o usuário pedir para criar um vendedor, utilize
+        add_UserTool somente se todas as informações necessárias
+        estiverem disponíveis.
 
-Se o usuário pedir para editar um vendedor, utilize
-edit_Usertool.
+        Se o usuário pedir para consultar vendedores, utilize
+        get_userTool.
 
-Se o usuário pedir para deletar um vendedor, informe que
-a exclusão não está disponível nesta IA, caso não exista
-uma ferramenta de exclusão disponível.
+        Se o usuário pedir para editar um vendedor, utilize
+        edit_Usertool.
 
-Se o comando não tiver relação com vendedores ou com
-as operações CRIAR, DELETAR, EDITAR ou CONSULTAR,
-responda:
+        Se o usuário pedir para deletar um vendedor, informe que
+        a exclusão não está disponível nesta IA, caso não exista
+        uma ferramenta de exclusão disponível.
 
-"Não posso executar essa atividade. Posso apenas realizar
-operações relacionadas aos vendedores no banco de dados."
+        Se  o usuário desejar deletar todo o banco de dados , ultilize a ferramente get_userTool para pegar todos os nomes dos vendedores no banco de dados , 
+        depois ultilize a ferramenta delete_userTool passando o nome de cada vendedor para excluir um por um
 
-COMANDO DO USUÁRIO:
+        Se o comando não tiver relação com vendedores ou com
+        as operações CRIAR, DELETAR, EDITAR ou CONSULTAR,
+        responda:
 
-{context}
-"""
+        "Não posso executar essa atividade. Posso apenas realizar
+        operações relacionadas aos vendedores no banco de dados."
+
+        COMANDO DO USUÁRIO:
+
+        {context}
+    
+    """
 
     print("\n[1] Prompt criado")
     print(prompt)
@@ -215,7 +214,8 @@ COMANDO DO USUÁRIO:
         tools=[
             add_UserTool,
             get_userTool,
-            edit_Usertool
+            edit_Usertool,
+            delete_Usertool
         ]
     )
 
@@ -228,6 +228,7 @@ COMANDO DO USUÁRIO:
 
     content = answer["messages"][-1].content
 
+    "formatação da resposta da ia"
     if isinstance(content, list):
         content = "".join(
             item.get("text", "")
@@ -235,10 +236,5 @@ COMANDO DO USUÁRIO:
             else str(item)
             for item in content
         )
-
-    print("\n==============================")
-    print("RESPOSTA FINAL DA IA")
-    print("==============================")
-    print(content)
 
     return str(content)
