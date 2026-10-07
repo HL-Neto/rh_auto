@@ -1,8 +1,12 @@
+import threading
+import webbrowser
+
 from API.api import app 
-from MODULLES.module import pdfRead
-from LLM.llm  import llm_process, command_process
 
+def abrir_navegador():
+    webbrowser.open("http://127.0.0.1:5000")
 
+if __name__ == "__main__":
+    threading.Timer(1.5, abrir_navegador).start()
 
-
-if __name__ == "__main__": app.run( host="0.0.0.0", port=5000, debug=True, use_reloader = False)
+    app.run(host="127.0.0.1", port=5000, debug=False)

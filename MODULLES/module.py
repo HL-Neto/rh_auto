@@ -19,6 +19,8 @@ cred = credentials.Certificate(os.getenv("FIREBASE_CREDENTIALS_PATH"))
 firebase_admin.initialize_app(cred)
     
 
+
+
 " ler os pdfs no arquivo PDF"
 def pdfRead():
     
@@ -48,6 +50,7 @@ def pdfRead():
 
     return data
 
+    
         
 
 "adiciona um usuário no banco de dados"
@@ -77,6 +80,9 @@ def add_user(nome:str , tipo:str , meta:int , motos:int, pops:int, vendas_card:i
 
     return
 
+
+
+
 def edit_user(nome:str , tipo:str , meta:int , motos:int, pops:int, vendas_card:int , vendas_other:int):
     
     "ativa o firebase e procura o nome da pessoa que vamos editar"
@@ -102,6 +108,17 @@ def edit_user(nome:str , tipo:str , meta:int , motos:int, pops:int, vendas_card:
     if vendas_other not in (None, ""):
         data["vendas_other"] = int(vendas_other)
 
+    bonus = calc(
+        data.get("meta", 0),
+        data.get("motos", 0),
+        data.get("pops", 0),
+        data.get("vendas_card", 0),
+        data.get("vendas_other", 0)
+    )
+
+    data["bonus"] = bonus
+
+    
     if not data:
         return 0
     
@@ -115,6 +132,9 @@ def edit_user(nome:str , tipo:str , meta:int , motos:int, pops:int, vendas_card:
     
 
     return updated
+
+
+
 
 "deleta o usuário"
 def delet_user(nome:str):
@@ -135,6 +155,9 @@ def delet_user(nome:str):
         deleted += 1
         
     return print(f"Sucesso! {deleted} documentos foram deletados.")
+    
+    
+    
     
 "busca o vendedor" 
 def get_user(nome:str):
