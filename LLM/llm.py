@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
 
-from TOOLS.tools import (add_UserTool, get_userTool, edit_Usertool, pdf_Reader, delete_Usertool)
+from TOOLS.tools import (add_UserTool, get_userTool, edit_Usertool, pdf_Reader, delete_Usertool,)
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ load_dotenv()
 
 """
 
-def llm_process():
+def llm_process(pdf):
 
 
 
@@ -29,7 +29,7 @@ def llm_process():
         OBJETIVO
         
         
-        1 - Utilize a ferramenta 'pdf_Reader' para buscar nos PDFs:
+        1 - voce vai procura na varivável pdf:
             - lista de vendedores
             - motos vendidas
             - meta
@@ -45,7 +45,10 @@ def llm_process():
             
             exemplo: um vendedor joão da silva, ele ja existe no banco de dados , a meta dele ta diferente da
             meta antiga, os outros dados são o mesmo,  então altere só a meta.
-            
+        
+        
+
+                
         3 - Ultilize a ferramenta add_UserTool passando todos os dados que você encontrou de forma correta :
             - quantidade total de motos vendidas
             - meta
@@ -127,7 +130,7 @@ def llm_process():
         tools=[
             add_UserTool,
             get_userTool,
-            pdf_Reader,
+            
         ]
     )
 
@@ -136,9 +139,18 @@ def llm_process():
             ("system", prompt),
             (
                 "user",
-                "Leia os PDFs, extraia os dados dos vendedores, "
-                "cadastre somente os vendedores que possuem meta "
-                "e depois consulte os vendedores cadastrados."
+                f"""
+                Estes são os dados extraidos dos pdfs:
+                
+                    {pdf}
+                
+                Leia os dados acima 
+                
+                Extraia os vendedores, meta, motos, POPs, vendas no cartão, outras vendas e tipo. 
+                Depois cadastre ou edite os vendedores utilizando as ferramentas disponíveis. 
+                Por fim, consulte os vendedores cadastrados.
+                
+                """
             )
         ]
     })

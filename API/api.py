@@ -1,7 +1,7 @@
 import os
 
-from flask           import Flask, request, render_template, redirect, url_for
-from MODULLES.module import ( add_user, delet_user, get_user, edit_user ) 
+from flask           import Flask, request, render_template, redirect, url_for , send_file
+from MODULLES.module import ( add_user, pdfTurn, get_user , pdfRead) 
 from LLM.llm         import ( llm_process, command_process )
 
 
@@ -79,14 +79,32 @@ def get():
 
 
 
+"EXPORTAR"
+
+@app.route("/exportar-pdf", methods=["GET"])
+def exportar_pdf():
+
+    # Busca todos os vendedores
+    vendedores = get_user("all")
+
+    # Gera o PDF
+    pdf = pdfTurn(vendedores)
+
+    # Envia diretamente para o navegador
+    return send_file( pdf, mimetype="application/pdf", as_attachment=True, download_name="relatorio_vendedores.pdf" )
+
+
+
+
 
 "PROCESSAR PDF"
 @app.route("/processar-pdfs", methods=["POST"])
 def processar_pdfs():
-
     
+    "processa os pdf"
+    pdf = pdfRead()
     "ativa a llm"
-    llm_process()
+    llm_process(pdf)
     "mostra os cendedores adicionados"
     vendedores = get_user("all")
 

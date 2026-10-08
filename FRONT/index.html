@@ -1039,6 +1039,53 @@
                 width: 100%;
             }
         }
+
+        .export-pdf-button {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 8px;
+
+            padding: 12px 20px;
+
+            border: none;
+            border-radius: 10px;
+
+            background: var(--black);
+            color: white;
+
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+
+            text-decoration: none;
+
+            cursor: pointer;
+
+            transition:
+                background .2s ease,
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+        .export-pdf-button:hover {
+            background: #29292d;
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 6px 16px rgba(0, 0, 0, .12);
+        }
+
+        .export-pdf-button:active {
+            transform: translateY(0);
+        }
+
+        .export-pdf-icon {
+            font-size: 15px;
+        }
     </style>
 </head>
 
@@ -1650,8 +1697,15 @@
                             Processar PDFs
                         </button>
                         
+                        
                     </form>
-
+                    <a
+                        href="/exportar-pdf"
+                        class="export-pdf-button"
+                    >
+                        <span class="export-pdf-icon">↓</span>
+                        Exportar PDF
+                    </a>
                 </div>
 
             </section>
