@@ -1,0 +1,1633 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motomar · Gestão de Vendedores</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --red: #e50914;
+            --red-dark: #b20710;
+            --red-soft: #fff1f2;
+            --black: #0b0b0d;
+            --black-2: #151518;
+            --black-3: #202024;
+            --white: #ffffff;
+            --background: #f5f5f5;
+            --text: #171719;
+            --muted: #77777f;
+            --border: #e7e7e9;
+            --sidebar: 255px;
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "DM Sans", sans-serif;
+            background: var(--background);
+            color: var(--text);
+        }
+
+        body.loading-active {
+            overflow: hidden;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        button:disabled {
+            opacity: .65;
+            cursor: wait;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar);
+            height: 100vh;
+            background: var(--black);
+            padding: 28px 18px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 10px;
+            margin-bottom: 40px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            background: var(--red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .brand-text {
+            color: white;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .brand-text span {
+            color: var(--red);
+        }
+
+        .menu-title {
+            color: #67676d;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0 12px;
+            margin-bottom: 10px;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 13px;
+            border-radius: 10px;
+            color: #aaaab0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: .2s;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: var(--black-3);
+            color: white;
+        }
+
+        .menu a.active {
+            box-shadow: inset 3px 0 0 var(--red);
+        }
+
+        .menu-icon {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            border-top: 1px solid #252529;
+            padding: 18px 10px 0;
+            color: #67676d;
+            font-size: 12px;
+        }
+
+        /* CONTEÚDO */
+
+        .main {
+            margin-left: var(--sidebar);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            scroll-margin-top: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 21px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .section-description {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* HERO */
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 90% 10%, rgba(229, 9, 20, .30), transparent 35%),
+                linear-gradient(135deg, #101014, #1a1a1f);
+            border-radius: 22px;
+            padding: 42px;
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(229, 9, 20, .08);
+            right: -70px;
+            bottom: -100px;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 700px;
+        }
+
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(229, 9, 20, .12);
+            color: #ff6870;
+            border: 1px solid rgba(229, 9, 20, .25);
+            padding: 7px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+
+        .hero-label span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #36d67a;
+        }
+
+        .hero h1 {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 34px;
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+
+        .hero h1 span {
+            color: var(--red);
+        }
+
+        .hero p {
+            color: #a6a6ad;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* ESTATÍSTICAS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 23px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border-radius: 13px;
+            background: var(--red-soft);
+            color: var(--red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .stat-info span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-info strong {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 23px;
+        }
+
+        /* CARTÕES */
+
+        .ai-card,
+        .search-card,
+        .documents-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+        }
+
+        .ai-card-header {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin-bottom: 17px;
+        }
+
+        .ai-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: var(--black);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-card-header h3 {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .ai-card-header span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .ai-description {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+
+        .command-examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .command-example {
+            border: 1px solid var(--border);
+            background: #fafafa;
+            color: #555;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .command-example:hover {
+            border-color: var(--red);
+            color: var(--red);
+            background: var(--red-soft);
+        }
+
+        .command-input {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 14px;
+            outline: none;
+            transition: .2s;
+        }
+
+        .command-input:focus,
+        .input-wrapper input:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, .08);
+        }
+
+        .ai-footer {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #28c76f;
+        }
+
+        /* BOTÕES */
+
+        .process-button,
+        .ai-command-button,
+        .search-button,
+        .upload-button,
+        .export-pdf-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: .2s;
+            white-space: nowrap;
+        }
+
+        .process-button,
+        .upload-button {
+            background: var(--red);
+            color: white;
+        }
+
+        .process-button:hover,
+        .upload-button:hover {
+            background: var(--red-dark);
+            transform: translateY(-1px);
+        }
+
+        .ai-command-button,
+        .search-button,
+        .export-pdf-button {
+            background: var(--black);
+            color: white;
+        }
+
+        .ai-command-button:hover,
+        .search-button:hover,
+        .export-pdf-button:hover {
+            background: #29292d;
+            transform: translateY(-1px);
+        }
+
+        /* PESQUISA */
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 45px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0 14px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        /* VENDEDORES */
+
+        .seller-list {
+            margin-top: 15px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .seller-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            align-items: center;
+            gap: 20px;
+            padding: 17px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .seller-row:last-child {
+            border-bottom: none;
+        }
+
+        .seller-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .seller-avatar {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 11px;
+            background: var(--black);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .seller-name {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 3px;
+            overflow-wrap: anywhere;
+        }
+
+        .seller-id {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .seller-field span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .seller-field strong {
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .seller-field .bonus {
+            color: #1a9c52;
+        }
+
+        .empty-state {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 35px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* DOCUMENTOS */
+
+        .upload-form {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-form input[type="file"] {
+            flex: 1;
+            min-width: 0;
+            border: 1px dashed #cfcfd3;
+            border-radius: 10px;
+            padding: 11px;
+            font-size: 13px;
+            background: #fafafa;
+        }
+
+        .selected-files {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        /* PROCESSAMENTO */
+
+        .process-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .process-card-content {
+            display: flex;
+            align-items: center;
+            gap: 17px;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .process-icon {
+            width: 54px;
+            height: 54px;
+            flex-shrink: 0;
+            background: var(--red-soft);
+            color: var(--red);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .process-card h3 {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .process-card p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            max-width: 700px;
+        }
+
+        .process-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* RESULTADO DA IA */
+
+        .ai-result {
+            margin-top: 20px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .ai-result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .ai-result-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--red-soft);
+            color: var(--red);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-result-header strong,
+        .ai-result-header span {
+            display: block;
+        }
+
+        .ai-result-header span {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .ai-result-content {
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        /* LOADING */
+
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(11, 11, 13, .96);
+            color: white;
+            backdrop-filter: blur(8px);
+        }
+
+        .loading-screen.active {
+            display: flex;
+        }
+
+        .loading-content {
+            width: 100%;
+            max-width: 390px;
+            text-align: center;
+            animation: loadingAppear .25s ease-out;
+        }
+
+        .loading-logo {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 29px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            margin-bottom: 35px;
+        }
+
+        .loading-logo span {
+            color: var(--red);
+        }
+
+        .loader {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 28px;
+            border: 4px solid #303035;
+            border-top-color: var(--red);
+            border-right-color: var(--red);
+            border-radius: 50%;
+            animation: girar .8s linear infinite;
+        }
+
+        .loading-content h2 {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 21px;
+            margin-bottom: 10px;
+        }
+
+        .loading-content p {
+            color: #a6a6ad;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .loading-progress {
+            height: 4px;
+            width: 100%;
+            background: #29292e;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 25px;
+        }
+
+        .loading-progress span {
+            display: block;
+            height: 100%;
+            width: 35%;
+            background: var(--red);
+            border-radius: 999px;
+            animation: progresso 1.4s ease-in-out infinite;
+        }
+
+        @keyframes girar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes progresso {
+            0% {
+                transform: translateX(-110%);
+            }
+            100% {
+                transform: translateX(300%);
+            }
+        }
+
+        @keyframes loadingAppear {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* NOTIFICAÇÕES */
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(380px, calc(100vw - 40px));
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, .15);
+            border: 1px solid var(--border);
+            animation: loadingAppear .25s ease-out;
+        }
+
+        .toast-icon {
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .toast.success .toast-icon {
+            background: #e8f8ee;
+            color: #168345;
+        }
+
+        .toast.error .toast-icon {
+            background: var(--red-soft);
+            color: var(--red);
+        }
+
+        .toast.info .toast-icon {
+            background: #edf3ff;
+            color: #2459a9;
+        }
+
+        .toast strong {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .toast p {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        /* RESPONSIVO */
+
+        @media (max-width: 1100px) {
+            .seller-row {
+                grid-template-columns: 2fr 1fr 1fr;
+            }
+
+            .seller-field:nth-child(4),
+            .seller-field:nth-child(5) {
+                display: none;
+            }
+        }
+
+        @media (max-width: 850px) {
+            :root {
+                --sidebar: 0px;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 15px;
+            }
+
+            .brand {
+                margin-bottom: 15px;
+            }
+
+            .menu {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .menu-title,
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .menu a {
+                white-space: nowrap;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 28px;
+            }
+
+            .hero h1 {
+                font-size: 27px;
+            }
+
+            .search-form,
+            .upload-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-button,
+            .upload-button {
+                width: 100%;
+                min-height: 45px;
+            }
+
+            .seller-row {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .seller-field:nth-child(4),
+            .seller-field:nth-child(5) {
+                display: block;
+            }
+
+            .process-card {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .process-actions {
+                width: 100%;
+            }
+
+            .process-actions form,
+            .process-actions a {
+                flex: 1;
+            }
+
+            .process-actions button,
+            .process-actions a {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .main {
+                padding: 14px;
+            }
+
+            .hero {
+                padding: 24px;
+            }
+
+            .hero h1 {
+                font-size: 24px;
+            }
+
+            .ai-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .ai-command-button {
+                width: 100%;
+                min-height: 45px;
+            }
+
+            .process-actions {
+                flex-direction: column;
+            }
+
+            .process-actions form,
+            .process-actions a {
+                width: 100%;
+            }
+
+            .toast-container {
+                top: 12px;
+                right: 12px;
+                width: calc(100vw - 24px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TELA DE LOADING -->
+    <div id="loading" class="loading-screen" aria-live="polite" aria-busy="true">
+        <div class="loading-content">
+            <div class="loading-logo">MOTO<span>MAR.</span></div>
+            <div class="loader"></div>
+            <h2 id="loading-title">Processando...</h2>
+            <p id="loading-text">Aguarde enquanto o sistema executa sua solicitação.</p>
+            <div class="loading-progress">
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo">GV</div>
+            <div class="brand-text">Moto<span>mar</span></div>
+        </div>
+
+        <div class="menu-title">Menu</div>
+
+        <nav class="menu">
+            <a href="#dashboard" class="active">
+                <span class="menu-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="/cadastro">
+                <span class="menu-icon">＋</span>
+                Novo vendedor
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            Motomar · Sistema interno
+        </div>
+    </aside>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main">
+        <div class="container">
+
+            <!-- DASHBOARD -->
+            <section class="section" id="dashboard">
+                <div class="hero">
+                    <div class="hero-content">
+                        <div class="hero-label">
+                            <span></span>
+                            Sistema operacional
+                        </div>
+
+                        <h1>
+                            Gestão de vendedores
+                            <span>Motomar</span>
+                        </h1>
+
+                        <p>
+                            Gerencie vendedores, metas, vendas e bonificações
+                            em um único ambiente. Utilize as ferramentas de IA
+                            para automatizar o processamento dos dados.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">US</div>
+                        <div class="stat-info">
+                            <span>Vendedores cadastrados</span>
+                            <strong>{{ vendedores|length if vendedores else 0 }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">IA</div>
+                        <div class="stat-info">
+                            <span>Processamento inteligente</span>
+                            <strong>Ativo</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">PDF</div>
+                        <div class="stat-info">
+                            <span>Relatórios</span>
+                            <strong>PDF</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ASSISTENTE IA -->
+            <section class="section" id="ia">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Assistente IA</div>
+                        <div class="section-description">
+                            Consulte e gerencie os vendedores utilizando linguagem natural.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-card">
+                    <div class="ai-card-header">
+                        <div class="ai-icon">✦</div>
+                        <div>
+                            <h3>Assistente de operações</h3>
+                            <span>Inteligência artificial</span>
+                        </div>
+                    </div>
+
+                    <p class="ai-description">
+                        Digite um comando para consultar ou gerenciar os vendedores cadastrados.
+                    </p>
+
+                    <div class="command-examples">
+                        <button type="button" class="command-example"
+                            onclick="setCommand('Quais vendedores não bateram a meta?')">
+                            Quais vendedores não bateram a meta?
+                        </button>
+
+                        <button type="button" class="command-example"
+                            onclick="setCommand('Alterar meta do vendedor :   para :')">
+                            Alterar meta do vendedor :   para :
+                        </button>
+
+                        <button type="button" class="command-example"
+                            onclick="setCommand('Adicionar o vendedor :  meta :  motos : pops : vendas no cartão : pops : outros :')">
+                            Adicionar o vendedor :  meta :  motos : pops : vendas no cartão : pops : outros :
+                        </button>
+                    </div>
+
+                    <form action="/llm" method="POST"
+                        data-loading-title="Executando comando"
+                        data-loading-message="A inteligência artificial está processando sua solicitação.">
+
+                        <textarea
+                            id="comando"
+                            name="comando"
+                            class="command-input"
+                            placeholder="Digite um comando para a IA..."
+                            required></textarea>
+
+                        <div class="ai-footer">
+                            <div class="ai-status">
+                                <span class="status-dot"></span>
+                                Assistente conectado
+                            </div>
+
+                            <button type="submit" class="ai-command-button">
+                                Executar comando
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if resultado %}
+                    <div class="ai-result">
+                        <div class="ai-result-header">
+                            <div class="ai-result-icon">✦</div>
+                            <div>
+                                <strong>Resposta da IA</strong>
+                                <span>Resultado do comando</span>
+                            </div>
+                        </div>
+
+                        <div class="ai-result-content">{{ resultado }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- BUSCAR VENDEDORES -->
+            <section class="section" id="buscar">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Consultar vendedores</div>
+                        <div class="section-description">
+                            Pesquise um vendedor específico ou utilize "all" para listar todos.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-card">
+                    <form action="/buscar" method="POST" class="search-form"
+                        data-loading-title="Buscando vendedores"
+                        data-loading-message="Aguarde enquanto consultamos os dados.">
+
+                        <div class="input-wrapper">
+                            <input
+                                type="text"
+                                name="nome"
+                                placeholder="Digite um nome ou 'all'"
+                                required>
+                        </div>
+
+                        <button type="submit" class="search-button">
+                            Buscar vendedor
+                        </button>
+                    </form>
+                </div>
+
+                {% if vendedores %}
+                <div class="seller-list">
+                    {% for vendedor in vendedores %}
+                    <div class="seller-row">
+                        <div class="seller-main">
+                            <div class="seller-avatar">
+                                {{ vendedor.nome[:2]|upper }}
+                            </div>
+
+                            <div>
+                                <div class="seller-name">{{ vendedor.nome }}</div>
+                                <div class="seller-id">ID: {{ vendedor.id }}</div>
+                            </div>
+                        </div>
+
+                        <div class="seller-field">
+                            <span>Tipo</span>
+                            <strong>{{ vendedor.tipo|default('Não informado') }}</strong>
+                        </div>
+
+                        <div class="seller-field">
+                            <span>Meta</span>
+                            <strong>{{ vendedor.meta|default(0) }}</strong>
+                        </div>
+
+                        <div class="seller-field">
+                            <span>Motos</span>
+                            <strong>{{ vendedor.motos|default(0) }}</strong>
+                        </div>
+
+                        <div class="seller-field">
+                            <span>Bônus</span>
+                            <strong class="bonus">
+                                R$ {{ vendedor.bonus|default(0) }}
+                            </strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    Nenhum vendedor para exibir.<br>
+                    Utilize o campo acima para realizar uma consulta.
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- DOCUMENTOS -->
+            <section class="section" id="documentos">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Documentos</div>
+                        <div class="section-description">
+                            Envie um ou vários relatórios PDF para o sistema.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="documents-card">
+                    <form
+                        id="upload-form"
+                        action="/upload-pdf"
+                        method="POST"
+                        enctype="multipart/form-data"
+                        class="upload-form"
+                        data-loading-title="Enviando documentos"
+                        data-loading-message="Aguarde enquanto os PDFs são enviados para o sistema.">
+
+                        <input
+                            id="pdf-files"
+                            type="file"
+                            name="arquivos"
+                            accept=".pdf,application/pdf"
+                            multiple
+                            required>
+
+                        <button id="upload-button" type="submit" class="upload-button">
+                            Enviar PDFs
+                        </button>
+                    </form>
+
+                    <div id="selected-files" class="selected-files">
+                        Nenhum arquivo selecionado.
+                    </div>
+                </div>
+            </section>
+
+            <!-- PROCESSAMENTO E EXPORTAÇÃO -->
+            <section class="section" id="processamento">
+                <div class="section-header">
+                    <div>
+                        <div class="section-title">Processamento de dados</div>
+                        <div class="section-description">
+                            Leia os relatórios PDF e atualize os dados dos vendedores.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="process-card">
+                    <div class="process-card-content">
+                        <div class="process-icon">PDF</div>
+
+                        <div>
+                            <h3>Processar relatórios</h3>
+                            <p>
+                                A IA irá analisar os relatórios PDF, identificar os vendedores,
+                                metas, motos e formas de pagamento e atualizar os dados no banco.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="process-actions">
+                        <form
+                            action="/processar-pdfs"
+                            method="POST"
+                            data-loading-title="Processando PDFs"
+                            data-loading-message="A IA está lendo os relatórios e atualizando os dados.">
+
+                            <button type="submit" class="process-button">
+                                Processar PDFs
+                            </button>
+                        </form>
+
+                        <a
+                            id="export-pdf"
+                            href="/exportar-pdf"
+                            class="export-pdf-button"
+                            data-loading-title="Gerando relatório"
+                            data-loading-message="Aguarde enquanto preparamos o PDF para exportação.">
+
+                            <span class="export-pdf-icon">↓</span>
+                            Exportar PDF
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // Comandos rápidos da IA
+        function setCommand(command) {
+            const textarea = document.getElementById("comando");
+
+            if (textarea) {
+                textarea.value = command;
+                textarea.focus();
+            }
+        }
+
+        // Controle da tela de loading
+        const loading = document.getElementById("loading");
+        const loadingTitle = document.getElementById("loading-title");
+        const loadingText = document.getElementById("loading-text");
+        const toastContainer = document.getElementById("toast-container");
+
+        function mostrarLoading(
+            titulo = "Processando...",
+            mensagem = "Aguarde enquanto o sistema executa sua solicitação."
+        ) {
+            loadingTitle.textContent = titulo;
+            loadingText.textContent = mensagem;
+            loading.classList.add("active");
+            document.body.classList.add("loading-active");
+        }
+
+        function esconderLoading() {
+            loading.classList.remove("active");
+            document.body.classList.remove("loading-active");
+        }
+
+        // Mensagens de confirmação
+        function mostrarToast(tipo, titulo, mensagem) {
+            const toast = document.createElement("div");
+            toast.className = `toast ${tipo}`;
+
+            const icone = document.createElement("div");
+            icone.className = "toast-icon";
+            icone.textContent = tipo === "success" ? "✓" :
+                tipo === "error" ? "!" : "i";
+
+            const conteudo = document.createElement("div");
+
+            const tituloElemento = document.createElement("strong");
+            tituloElemento.textContent = titulo;
+
+            const mensagemElemento = document.createElement("p");
+            mensagemElemento.textContent = mensagem;
+
+            conteudo.appendChild(tituloElemento);
+            conteudo.appendChild(mensagemElemento);
+            toast.appendChild(icone);
+            toast.appendChild(conteudo);
+            toastContainer.appendChild(toast);
+
+            window.setTimeout(() => {
+                toast.remove();
+            }, 6000);
+        }
+
+        // Loading nos formulários que navegam para outra rota
+        document.querySelectorAll("form[data-loading-title]").forEach(form => {
+            form.addEventListener("submit", event => {
+                // O envio dos PDFs tem tratamento próprio com fetch.
+                if (form.id === "upload-form") {
+                    return;
+                }
+
+                if (!form.checkValidity()) {
+                    return;
+                }
+
+                const botao = form.querySelector('button[type="submit"]');
+
+                if (botao) {
+                    botao.disabled = true;
+                }
+
+                mostrarLoading(
+                    form.dataset.loadingTitle,
+                    form.dataset.loadingMessage
+                );
+            });
+        });
+
+        // Mostrar os nomes dos PDFs selecionados
+        const pdfInput = document.getElementById("pdf-files");
+        const selectedFiles = document.getElementById("selected-files");
+
+        pdfInput.addEventListener("change", () => {
+            const arquivos = Array.from(pdfInput.files);
+
+            if (arquivos.length === 0) {
+                selectedFiles.textContent = "Nenhum arquivo selecionado.";
+                return;
+            }
+
+            selectedFiles.textContent =
+                `${arquivos.length} PDF(s) selecionado(s): ` +
+                arquivos.map(arquivo => arquivo.name).join(", ");
+        });
+
+        // Envio dos PDFs sem recarregar a página
+        const uploadForm = document.getElementById("upload-form");
+        const uploadButton = document.getElementById("upload-button");
+
+        uploadForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const arquivos = Array.from(pdfInput.files);
+
+            if (arquivos.length === 0) {
+                mostrarToast(
+                    "error",
+                    "Nenhum PDF selecionado",
+                    "Selecione pelo menos um arquivo PDF antes de enviar."
+                );
+                return;
+            }
+
+            const arquivosInvalidos = arquivos.filter(arquivo =>
+                !arquivo.name.toLowerCase().endsWith(".pdf") &&
+                arquivo.type !== "application/pdf"
+            );
+
+            if (arquivosInvalidos.length > 0) {
+                mostrarToast(
+                    "error",
+                    "Arquivo inválido",
+                    "Selecione somente arquivos PDF."
+                );
+                return;
+            }
+
+            const formData = new FormData(uploadForm);
+
+            uploadButton.disabled = true;
+
+            mostrarLoading(
+                "Enviando documentos",
+                `Enviando ${arquivos.length} PDF(s). Aguarde a conclusão do envio.`
+            );
+
+            try {
+                const resposta = await fetch(uploadForm.action, {
+                    method: "POST",
+                    body: formData,
+                    redirect: "follow"
+                });
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        `O servidor respondeu com o status ${resposta.status}.`
+                    );
+                }
+
+                esconderLoading();
+
+                mostrarToast(
+                    "success",
+                    "PDFs enviados com sucesso!",
+                    `${arquivos.length} arquivo(s) enviado(s) para o sistema.`
+                );
+
+                uploadForm.reset();
+                selectedFiles.textContent = "Nenhum arquivo selecionado.";
+
+            } catch (erro) {
+                esconderLoading();
+
+                mostrarToast(
+                    "error",
+                    "Erro ao enviar os PDFs",
+                    "Não foi possível confirmar o envio. Verifique sua conexão e tente novamente."
+                );
+
+                console.error("Erro no upload dos PDFs:", erro);
+
+            } finally {
+                uploadButton.disabled = false;
+            }
+        });
+
+        // Loading na exportação.
+        // O navegador não oferece um evento universal para saber quando
+        // o download de um arquivo iniciado por link terminou.
+        const exportButton = document.getElementById("export-pdf");
+
+        exportButton.addEventListener("click", () => {
+            mostrarLoading(
+                exportButton.dataset.loadingTitle,
+                exportButton.dataset.loadingMessage
+            );
+
+            window.setTimeout(() => {
+                esconderLoading();
+            }, 1800);
+        });
+
+        // Ativar o item de menu da seção visível
+        const sections = document.querySelectorAll(".section");
+        const menuLinks = document.querySelectorAll('.menu a[href^="#"]');
+
+        window.addEventListener("scroll", () => {
+            let current = "";
+
+            sections.forEach(section => {
+                if (window.scrollY >= section.offsetTop - 140) {
+                    current = section.id;
+                }
+            });
+
+            menuLinks.forEach(link => {
+                link.classList.toggle(
+                    "active",
+                    link.getAttribute("href") === "#" + current
+                );
+            });
+        });
+
+        // Navegação suave pelo menu
+        menuLinks.forEach(link => {
+            link.addEventListener("click", event => {
+                const targetId = link.getAttribute("href");
+                const target = document.querySelector(targetId);
+
+                if (target) {
+                    event.preventDefault();
+
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+            });
+        });
+
+        // Exibe notificações vindas do Flask através de parâmetros na URL.
+        // Exemplo: /?upload=sucesso
+        const parametros = new URLSearchParams(window.location.search);
+
+        if (parametros.get("upload") === "sucesso") {
+            mostrarToast(
+                "success",
+                "PDFs enviados com sucesso!",
+                "Os documentos foram recebidos pelo sistema."
+            );
+        } else if (parametros.get("upload") === "erro") {
+            mostrarToast(
+                "error",
+                "Erro ao enviar PDFs",
+                "O servidor não conseguiu salvar os documentos."
+            );
+        }
+    </script>
+
+</body>
+</html>
+
