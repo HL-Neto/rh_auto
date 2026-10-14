@@ -1,15 +1,15 @@
 import os
 import json
 import firebase_admin
+import pdfplumber
 
 from io                         import BytesIO
 from fpdf                       import FPDF
 from firebase_admin             import credentials, firestore
 from dotenv                     import load_dotenv
-from pypdf                      import PdfReader
 from pathlib                    import Path
 from datetime                   import datetime
-from docling.document_converter import DocumentConverter
+
 
 load_dotenv()
     
@@ -52,67 +52,134 @@ def delet_pdfs():
 " ler os pdfs no arquivo PDF"
 
 def pdfRead():
-    
-    converter = DocumentConverter()
-
-    arquivos = list(PDF_DIR.glob("*.pdf"))
-
     dados = {
         "metas": {
             "arquivo": None,
             "tabelas": [],
+            "texto": "",
         },
         "vendas": {
             "arquivo": None,
             "tabelas": [],
+            "texto": "",
         },
         "outros_documentos": [],
     }
 
+    if not PDF_DIR.exists():
+        return json.dumps(dados, ensure_ascii=False, indent=2)
+
+    arquivos = sorted(
+        PDF_DIR.glob("*.pdf"),
+        key=lambda arquivo: arquivo.name.casefold()
+    )
+
     for arquivo in arquivos:
         try:
-            resultado = converter.convert(str(arquivo))
-            doc = resultado.document
-
             tabelas = []
+            textos = []
 
-            for numero, tabela in enumerate(doc.tables, start=1):
-                dataframe = tabela.export_to_dataframe(doc=doc)
+            with pdfplumber.open(arquivo) as pdf:
+                for pagina_num, pagina in enumerate(pdf.pages, start=1):
+                    texto = pagina.extract_text(
+                        x_tolerance=2,
+                        y_tolerance=3
+                    ) or ""
 
-                linhas = dataframe.fillna("").to_dict(
-                    orient="records"
-                )
+                    textos.append(
+                        f"PÁGINA {pagina_num}\n{texto}"
+                    )
 
-                tabelas.append({
-                    "tabela": numero,
-                    "colunas": [
-                        str(coluna)
-                        for coluna in dataframe.columns
-                    ],
-                    "linhas": linhas,
-                })
+                    for tabela in pagina.extract_tables() or []:
+                        if not tabela:
+                            continue
+
+                        linhas = [
+                            [
+                                str(celula).strip()
+                                if celula is not None else ""
+                                for celula in linha
+                            ]
+                            for linha in tabela
+                            if linha and any(
+                                celula is not None
+                                and str(celula).strip()
+                                for celula in linha
+                            )
+                        ]
+
+                        if not linhas:
+                            continue
+
+                        colunas = [
+                            valor or f"coluna_{i + 1}"
+                            for i, valor in enumerate(linhas[0])
+                        ]
+
+                        # Impede que cabeçalhos duplicados sobrescrevam dados.
+                        contagem = {}
+                        colunas_unicas = []
+
+                        for coluna in colunas:
+                            contagem[coluna] = contagem.get(coluna, 0) + 1
+
+                            if contagem[coluna] > 1:
+                                coluna = (
+                                    f"{coluna}_{contagem[coluna]}"
+                                )
+
+                            colunas_unicas.append(coluna)
+
+                        registros = []
+
+                        for linha in linhas[1:]:
+                            linha = (
+                                linha + [""] * len(colunas_unicas)
+                            )[:len(colunas_unicas)]
+
+                            registros.append({
+                                colunas_unicas[i]: valor
+                                for i, valor in enumerate(linha)
+                            })
+
+                        tabelas.append({
+                            "pagina": pagina_num,
+                            "tabela": len(tabelas) + 1,
+                            "colunas": colunas_unicas,
+                            "linhas": registros,
+                        })
+
+            texto_completo = "\n\n".join(textos)
 
             documento = {
                 "arquivo": arquivo.name,
                 "tabelas": tabelas,
-                "texto_markdown": doc.export_to_markdown(),
+                "texto_markdown": texto_completo,
             }
 
-            nome_arquivo = arquivo.name.casefold()
+            nome = arquivo.name.casefold()
 
-            if "vendas de motos por equipes" in nome_arquivo:
-                dados["metas"]["arquivo"] = arquivo.name
-                dados["metas"]["tabelas"] = tabelas
+            if "vendas de motos por equipes" in nome:
+                dados["metas"] = {
+                    "arquivo": arquivo.name,
+                    "tabelas": tabelas,
+                    "texto": texto_completo,
+                }
 
-            elif (
-                "comissoes" in nome_arquivo
-                and "pagamento" in nome_arquivo
-            ):
-                dados["vendas"]["arquivo"] = arquivo.name
-                dados["vendas"]["tabelas"] = tabelas
+            elif "comissoes" in nome and "pagamento" in nome:
+                dados["vendas"] = {
+                    "arquivo": arquivo.name,
+                    "tabelas": tabelas,
+                    "texto": texto_completo,
+                }
 
             else:
                 dados["outros_documentos"].append(documento)
+
+            print(
+                f"PDF lido: {arquivo.name} | "
+                f"Tabelas: {len(tabelas)}"
+            )
 
         except Exception as erro:
             print(f"Erro ao ler {arquivo.name}: {erro}")
@@ -123,7 +190,6 @@ def pdfRead():
         indent=2,
         default=str,
     )
-
 
 
 "transforma em pdf"
@@ -517,7 +583,7 @@ def get_user(nome:str):
     return vendedores
 
 
-def calc(meta: int, motos: int, vendas_card: int, vendas_other: int) -> int:
+def calc(meta: int, motos: int, pops: int, vendas_card: int, vendas_other: int) -> int:
     
     """Calcula o bônus do vendedor quando a quantidade de vendas ultrapassa a meta."""
     
