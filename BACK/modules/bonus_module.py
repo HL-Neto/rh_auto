@@ -14,10 +14,7 @@ from datetime                   import datetime
 load_dotenv()
     
 
-''' 
-    AQUI FICAM AS FUNÇÕES QUE ULTILIZAMOS NO SISTEMA INTEIRO  
 
-'''
 
 "credencias de autenticação do firebase , para operações com o bd"
 cred = credentials.Certificate(os.getenv("FIREBASE_CREDENTIALS_PATH"))
@@ -25,7 +22,7 @@ firebase_admin.initialize_app(cred)
     
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-PDF_DIR = BASE_DIR / "PDF"
+PDF_DIR = BASE_DIR / "pdf"
 
 
 

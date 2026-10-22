@@ -1,5 +1,5 @@
 from langchain_core.tools import tool
-from MODULLES.module import get_user, add_user, edit_user , calc , pdfRead , delet_user , pdfTurn
+from BACK.modules.bonus_module import get_user, add_user, edit_user , calc , pdfRead , delet_user , pdfTurn
               
 """
     AS FERRANENTAS QUE AS LLMS ULTILIZAM 

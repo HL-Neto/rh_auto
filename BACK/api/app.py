@@ -1,17 +1,25 @@
 import os
 import logging
 import traceback
-from flask           import Flask, request, render_template, redirect, url_for , send_file
-from MODULLES.module import ( add_user, pdfTurn, get_user , pdfRead,delet_pdfs) 
-from LLM.llm         import ( llm_process, command_process )
+
+from flask                      import Flask, request, render_template, send_file , jsonify
+from BACK.modules.bonus_module  import ( add_user, pdfTurn, get_user , pdfRead,delet_pdfs) 
+from BACK.modules.gmail_module  import ( gmail_inbox, attachment , get_curriculum , fb_send_curriculum , fb_get_curriculum)
+from BACK.llm.llm               import ( bonus_llm_process, command_process, curriculo_llm_process )
 
 
 "procura uma pasta usando como referencia a pasta principal"
-BASE_DIR = os.path.dirname( os.path.dirname( os.path.abspath(__file__)))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+FRONT_DIR = os.path.join(BASE_DIR, "FRONT")
 
 "procura a pasta do front"
-app = Flask( __name__, template_folder=os.path.join(BASE_DIR, "FRONT")
-)
+app = Flask( __name__, template_folder=os.path.join(BASE_DIR, "FRONT"))
+@app.before_request
+
+def log_request():
+    print(f"Requisição: {request.method} {request.path}")
+
 logging.basicConfig(
     filename="erro_motomar.log",
     level=logging.ERROR,
@@ -41,9 +49,14 @@ def cadastro():
 
     return render_template("cadastro.html")
 
+@app.route("/curriculo")
+def curriculo():
+
+    return render_template("curriculo.html")
 
 
-"// API //"
+
+"// API  BONUS//"
 
 
 
@@ -116,7 +129,7 @@ def processar_pdfs():
     pdf = pdfRead()
     
     "ativa a llm"
-    llm_process(pdf)
+    bonus_llm_process(pdf)
     
     "deleta os pdfs"
     delet_pdfs()
@@ -178,3 +191,56 @@ def ia():
 
     return render_template("index.html", vendedores=vendedores, resultado=resultado)
 
+
+
+
+
+
+"// API  CURRICULO//"
+
+
+"envia os curriculos para o firebase"
+@app.route("/push", methods=["POST"])
+def processes_email_curriculum():
+    
+    quant_curriculo = request.args.get("quant_curriculo",default=20,type=int)
+    
+    "puxa o conteudo dos emails"
+    inbox      = gmail_inbox(quant_curriculo) 
+    "verifica se tem algum anexo e baixa ele em base 64"
+    anexo      = attachment(inbox)
+    "baixa os curriculos em base 64 e armazena suas informações"
+    curriculos = get_curriculum(anexo)
+    "manda os curriculos para o fb"
+    resultado =  fb_send_curriculum(curriculos)
+
+    return jsonify({
+        "success": True,
+        "message": "Processamento dos currículos concluído",
+        "quantidade": len(curriculos),
+        "resultado": resultado
+    }), 200
+
+
+
+"envia para llm analisar"
+@app.route("/analise", methods=["POST"])
+def analise_curriculo():
+ 
+
+    resultado = curriculo_llm_process()
+   
+        
+    return jsonify({
+        "success": True,
+        "message": "Análise concluída",
+        "resultado": resultado
+    }), 200
+    
+    
+@app.route("/buscar-curriculos", methods = ["GET"])
+def list_curriculos():
+    
+    result = fb_get_curriculum("all")
+    
+    return jsonify(result), 200

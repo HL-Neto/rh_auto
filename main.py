@@ -3,7 +3,7 @@ import threading
 import webbrowser
 import logging
 
-from API.api import app
+from BACK.api.app import app
 
 logging.basicConfig(level=logging.DEBUG)
 
