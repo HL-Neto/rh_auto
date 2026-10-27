@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -335,13 +334,14 @@
 
         .operations-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1fr);
             gap: 18px;
             margin-bottom: 34px;
         }
 
         .operation-card,
-        .results-card {
+        .results-card,
+        .curriculos-container {
             background: white;
             border: 1px solid var(--border);
             border-radius: var(--radius);
@@ -352,7 +352,6 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            min-height: 270px;
         }
 
         .operation-icon {
@@ -365,11 +364,6 @@
             color: var(--red);
             font-size: 21px;
             margin-bottom: 18px;
-        }
-
-        .operation-icon.dark {
-            background: var(--black);
-            color: white;
         }
 
         .operation-tag {
@@ -389,26 +383,36 @@
             font-size: 13px;
             line-height: 1.7;
             margin: 9px 0 22px;
-            max-width: 470px;
+            max-width: 600px;
         }
 
-        .operation-card label {
+        .import-controls {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .import-controls label {
             font-size: 12px;
             font-weight: 600;
+            width: 100%;
         }
 
-        .operation-card input {
-            width: 100%;
+        .import-controls input {
+            flex: 1;
+            min-width: 100px;
             padding: 12px;
-            margin: 10px 0 16px;
             border: 1px solid var(--border);
             border-radius: 10px;
             outline: none;
         }
 
-        .operation-card input:focus {
+        .import-controls input:focus {
             border-color: var(--red);
-            box-shadow: 0 0 0 3px rgba(229, 9, 20, .08);
+            box-shadow: 0 0 0 3px rgba(229,9,20,.08);
         }
 
         .btn {
@@ -457,6 +461,32 @@
             background: #f8f8f8;
         }
 
+        .btn-analisar {
+            background: var(--black);
+            color: white;
+            padding: 10px 13px;
+            white-space: nowrap;
+        }
+
+        .btn-analisar:hover:not(:disabled) {
+            background: var(--red);
+        }
+
+        .btn-refresh {
+            background: white;
+            color: #555;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 9px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .btn-refresh:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
         .notice {
             padding: 13px 16px;
             border-radius: 10px;
@@ -485,21 +515,18 @@
             color: var(--red-dark);
         }
 
-        /* Tabela de currículos */
         .curriculos-container {
             margin: 0 0 34px;
             padding: 26px;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            box-shadow: 0 8px 28px rgba(20, 20, 30, .045);
+            box-shadow: 0 8px 28px rgba(20,20,30,.045);
+            scroll-margin-top: 24px;
         }
 
         .curriculos-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 16px;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
@@ -510,15 +537,14 @@
         }
 
         .curriculos-heading-icon {
-            display: grid;
-            place-items: center;
-            width: 44px;
-            height: 44px;
-            flex-shrink: 0;
-            border-radius: 13px;
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
             background: var(--red-soft);
             color: var(--red);
-            font-size: 21px;
+            display: grid;
+            place-items: center;
+            font-size: 22px;
         }
 
         .curriculos-heading h2 {
@@ -534,318 +560,229 @@
         .table-actions {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .total-badge {
-            padding: 8px 12px;
+            background: var(--red-soft);
+            color: var(--red-dark);
+            padding: 8px 11px;
             border-radius: 999px;
-            background: #f2f2f4;
-            color: #55555d;
-            font-size: 12px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: 800;
             white-space: nowrap;
-        }
-
-        .btn-refresh {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 14px;
-            background: var(--black);
-            color: white;
-            border: 0;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 700;
-            transition: background .2s, transform .2s;
-        }
-
-        .btn-refresh:hover {
-            background: var(--red);
-            transform: translateY(-1px);
         }
 
         .tabela-wrapper {
             width: 100%;
             overflow-x: auto;
-            border: 1px solid var(--border);
-            border-radius: 12px;
         }
 
-        #tabelaCurriculos {
+        table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
             text-align: left;
         }
 
-        #tabelaCurriculos thead {
-            background: var(--black-2);
-            color: white;
+        thead {
+            background: #f8f8f9;
         }
 
-        #tabelaCurriculos th {
-            padding: 15px 20px;
+        th {
+            color: #77777f;
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: .8px;
-            font-weight: 700;
-        }
-
-        #tabelaCurriculos td {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eeeef0;
-            color: #44444c;
-        }
-
-        #tabelaCurriculos tbody tr {
-            transition: background .15s;
-        }
-
-        #tabelaCurriculos tbody tr:hover {
-            background: #fff8f8;
-        }
-
-        #tabelaCurriculos tbody tr:last-child td {
-            border-bottom: 0;
-        }
-
-        .remetente-cell {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 220px;
-        }
-
-        .remetente-avatar {
-            display: grid;
-            place-items: center;
-            width: 36px;
-            height: 36px;
-            flex-shrink: 0;
-            border-radius: 50%;
-            background: var(--red-soft);
-            color: var(--red-dark);
-            font-size: 13px;
             font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .remetente-nome {
+        td {
+            padding: 15px 16px;
+            border-bottom: 1px solid #f0f0f2;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #fcfcfd;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .remetente {
             font-weight: 600;
             overflow-wrap: anywhere;
         }
 
+        .table-loading,
         .table-empty {
-            padding: 35px 20px !important;
+            padding: 32px 16px;
             text-align: center;
-            color: var(--muted) !important;
+            color: var(--muted);
         }
 
-        .table-loading {
-            padding: 30px !important;
-            text-align: center;
-            color: var(--muted) !important;
+        .resultado-analise {
+            margin-top: 24px;
+            padding: 25px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            scroll-margin-top: 24px;
         }
 
-        .results-card {
-            overflow: hidden;
-            margin-bottom: 30px;
+        .resultado-analise[hidden] {
+            display: none;
         }
 
-        .results-header {
+        .analise-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 15px;
-            padding: 20px 22px;
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 14px;
+        }
+
+        .analise-header h2 {
+            font-size: 20px;
+        }
+
+        .btn-fechar {
+            background: #f2f2f4;
+            color: #555;
+            border: 0;
+            padding: 9px 13px;
+            border-radius: 9px;
+            font-weight: 700;
+        }
+
+        #remetenteAnalise {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 20px;
+            overflow-wrap: anywhere;
+        }
+
+        #conteudoAnalise {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
+        }
+
+        #conteudoAnalise pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font: inherit;
+        }
+
+        #conteudoAnalise h1,
+        #conteudoAnalise h2,
+        #conteudoAnalise h3 {
+            font-size: 16px;
+            margin: 18px 0 8px;
+        }
+
+        #conteudoAnalise ul,
+        #conteudoAnalise ol {
+            padding-left: 22px;
+            margin: 8px 0;
+        }
+
+        .results-card {
+            padding: 25px;
+            margin-bottom: 24px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .results-header h3 {
-            font-size: 15px;
+            font-size: 18px;
+            margin-bottom: 5px;
         }
 
         .results-header p {
             color: var(--muted);
             font-size: 12px;
-            margin-top: 6px;
         }
 
         .counter {
-            white-space: nowrap;
-            background: #f1f1f3;
-            color: #666;
+            padding: 8px 11px;
+            background: #f3f3f5;
             border-radius: 999px;
-            padding: 7px 10px;
+            color: #555;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 800;
+            white-space: nowrap;
         }
 
         .empty-state {
-            padding: 42px 20px;
+            padding: 28px 15px;
             text-align: center;
             color: var(--muted);
         }
 
         .empty-state strong {
             display: block;
-            color: var(--text);
-            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 7px;
         }
 
         .empty-state p {
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.6;
         }
 
         .results-list {
             display: grid;
+            gap: 12px;
         }
 
         .result-item {
-            padding: 20px 22px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .result-item:last-child {
-            border-bottom: 0;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 17px;
+            min-width: 0;
         }
 
         .result-item h4 {
             font-size: 14px;
-            margin-bottom: 9px;
+            margin-bottom: 10px;
+            overflow-wrap: anywhere;
         }
 
         .result-item pre {
             white-space: pre-wrap;
             overflow-wrap: anywhere;
-            color: #555;
             font: 13px/1.7 "DM Sans", sans-serif;
-        }
-
-        .candidate-card {
-            padding: 22px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .candidate-card:last-child {
-            border-bottom: 0;
-        }
-
-        .candidate-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .candidate-identity {
-            display: flex;
-            align-items: center;
-            gap: 13px;
-            min-width: 0;
-        }
-
-        .candidate-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            background: var(--red-soft);
-            color: var(--red);
-            font-weight: 800;
-            flex-shrink: 0;
-        }
-
-        .candidate-identity h3 {
-            font-size: 15px;
-            overflow-wrap: anywhere;
-        }
-
-        .candidate-identity p {
-            margin-top: 5px;
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .classification {
-            font-size: 11px;
-            font-weight: 700;
-            background: #eaf8ef;
-            color: #216c43;
-            border-radius: 999px;
-            padding: 7px 10px;
-            max-width: 220px;
-            overflow-wrap: anywhere;
-        }
-
-        .score-block {
-            margin-bottom: 20px;
-        }
-
-        .score-header {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            font-size: 12px;
-            margin-bottom: 9px;
-        }
-
-        .score-header span {
-            color: var(--muted);
-        }
-
-        .score-header strong {
-            color: var(--text);
-        }
-
-        .score-track {
-            height: 7px;
-            border-radius: 999px;
-            overflow: hidden;
-            background: #eeeef0;
-        }
-
-        .score-fill {
-            height: 100%;
-            border-radius: inherit;
-            background: #28a866;
-        }
-
-        .score-fill.medium {
-            background: #e6a23c;
-        }
-
-        .score-fill.low {
-            background: var(--red);
-        }
-
-        .analysis-content {
             color: #555;
-            font-size: 13px;
-            line-height: 1.8;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
         }
 
         .footer {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
+            gap: 15px;
+            padding: 20px 0 5px;
             border-top: 1px solid var(--border);
-            padding: 20px 0;
-            color: #9999a1;
+            color: #92929a;
             font-size: 11px;
         }
 
         .spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255,255,255,.35);
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(255,255,255,.4);
             border-top-color: white;
             border-radius: 50%;
             animation: spin .7s linear infinite;
@@ -855,34 +792,34 @@
             to { transform: rotate(360deg); }
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 1000px) {
+            :root {
+                --sidebar: 215px;
+            }
+
             .main {
-                padding: 24px;
+                padding: 22px;
             }
 
             .stats {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
             }
 
-            .stat-card:last-child {
-                grid-column: 1 / -1;
+            .stat-card {
+                padding: 16px;
             }
         }
 
-        @media (max-width: 850px) {
-            :root {
-                --sidebar: 0px;
-            }
-
+        @media (max-width: 720px) {
             .sidebar {
                 position: relative;
                 width: 100%;
                 height: auto;
-                padding: 16px 18px;
+                padding: 16px;
             }
 
             .brand {
-                margin-bottom: 16px;
+                margin-bottom: 18px;
             }
 
             .menu-title,
@@ -892,57 +829,29 @@
 
             .menu {
                 flex-direction: row;
-                overflow-x: auto;
+                flex-wrap: wrap;
             }
 
             .menu a {
-                white-space: nowrap;
                 padding: 10px;
                 font-size: 12px;
             }
 
             .main {
                 margin-left: 0;
-                padding: 18px;
+                padding: 16px;
             }
 
             .hero {
-                padding: 27px;
-            }
-        }
-
-        @media (max-width: 620px) {
-            .topbar {
-                align-items: flex-start;
-                flex-direction: column;
-                margin-bottom: 18px;
+                padding: 25px;
             }
 
-            .stats,
-            .operations-grid {
+            .stats {
                 grid-template-columns: 1fr;
             }
 
-            .stat-card:last-child {
-                grid-column: auto;
-            }
-
-            .section-header,
-            .results-header {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .operation-card {
-                min-height: 0;
-            }
-
-            .footer {
-                flex-direction: column;
-            }
-
             .curriculos-container {
-                padding: 18px;
+                padding: 16px;
             }
 
             .curriculos-header {
@@ -955,15 +864,40 @@
                 justify-content: space-between;
             }
 
-            .curriculos-heading h2 {
-                font-size: 16px;
+            .btn-analisar {
+                padding: 9px 10px;
+                font-size: 12px;
             }
 
-            .candidate-top {
+            th, td {
+                padding: 12px 10px;
+            }
+
+            .footer {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .topbar {
+                align-items: flex-start;
                 flex-direction: column;
             }
 
-            
+            .import-controls {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .import-controls input,
+            .import-controls button {
+                width: 100%;
+            }
+
+            .analise-header,
+            .results-header {
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -977,8 +911,8 @@
 
         <div class="menu-title">Menu principal</div>
 
-        <nav class="menu" aria-label="Navegação principal">
-            <a href="/">
+        <nav class="menu">
+            <a href="/" class="active">
                 <span class="menu-icon">▦</span>
                 Gestão de vendedores
             </a>
@@ -986,151 +920,128 @@
                 <span class="menu-icon">＋</span>
                 Novo vendedor
             </a>
-            <a class="active" href="/curriculo">
-                <span class="menu-icon">☷</span>
-                Currículos
-            </a>
-        </nav>
 
         <div class="sidebar-bottom">
-            Sistema de RH<br>
-            Triagem inteligente de candidatos
+            Motomar · Gestão de Recursos Humanos<br>
+            Sistema de triagem de currículos
         </div>
     </aside>
 
     <main class="main">
         <div class="container">
-            <header class="topbar">
+            <header class="topbar" id="inicio">
                 <div class="breadcrumb">
-                    Gestão de vendedores <span>/</span> Currículos
+                    Motomar <span>/</span> Recursos Humanos
                 </div>
+
                 <div class="system-status">
                     <span class="status-dot"></span>
-                    Sistema de triagem
+                    Painel de RH
                 </div>
             </header>
 
-            <section class="hero" id="dashboard">
+            <section class="hero">
                 <div class="hero-content">
                     <div class="hero-label">
-                        <span class="status-dot"></span>
-                        RECURSOS HUMANOS
+                        ✦ RECRUTAMENTO INTELIGENTE
                     </div>
-                    <h1>Triagem inteligente de <span>currículos</span></h1>
+
+                    <h1>
+                        Analisador de currículos<span>.</span>
+                    </h1>
+
                     <p>
-                        Importe currículos recebidos pelo Gmail, armazene os registros e
-                        execute a análise dos candidatos. Acompanhe abaixo o retorno de
-                        cada operação.
+                        Gerencie os currículos recebidos e analise cada candidato
+                        individualmente. Selecione o candidato desejado para
+                        iniciar sua análise, sem processar os demais currículos.
                     </p>
                 </div>
             </section>
 
-            <section class="stats" aria-label="Resumo da sessão">
+            <section class="stats">
                 <article class="stat-card">
                     <div class="stat-icon">↥</div>
                     <div class="stat-info">
-                        <span>Currículos importados</span>
-                        <strong id="importedCount">—</strong>
+                        <span>Currículos importados nesta sessão</span>
+                        <strong id="importedCount">0</strong>
                     </div>
                 </article>
 
                 <article class="stat-card">
                     <div class="stat-icon">✦</div>
                     <div class="stat-info">
-                        <span>Análises realizadas</span>
+                        <span>Currículos analisados nesta sessão</span>
                         <strong id="analyzedCount">0</strong>
                     </div>
                 </article>
 
                 <article class="stat-card">
-                    <div class="stat-icon">✓</div>
+                    <div class="stat-icon">☷</div>
                     <div class="stat-info">
-                        <span>Compatibilidade média</span>
-                        <strong id="averageScore">—</strong>
+                        <span>Currículos cadastrados</span>
+                        <strong id="totalStat">—</strong>
                     </div>
                 </article>
             </section>
 
-            <section class="section" id="operacoes">
-                <div class="section-header">
-                    <div>
-                        <h2 class="section-title">Operações</h2>
-                        <p class="section-description">
-                            Execute cada etapa do processo seletivo.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <div class="operations-grid">
+            <section class="operations-grid" id="importacao">
                 <article class="operation-card">
                     <div class="operation-icon">↥</div>
-                    <span class="operation-tag">ETAPA 01</span>
-
-                    <h3>Importar currículos</h3>
+                    <span class="operation-tag">IMPORTAÇÃO DE DADOS</span>
+                    <h3>Importar currículos do Gmail</h3>
                     <p>
-                        Consulte os e-mails do Gmail e importe os currículos
-                        encontrados para o sistema de RH.
+                        Busque os e-mails e importe os currículos para o banco
+                        de dados. Depois, escolha individualmente quais candidatos
+                        deseja analisar.
                     </p>
 
-                    <label for="quantCurriculo">
-                        Quantidade de e-mails para consultar
-                    </label>
+                    <div class="import-controls">
+                        <label for="quantCurriculo">
+                            Quantidade de e-mails para consultar
+                        </label>
 
-                    <input
-                        type="number"
-                        id="quantCurriculo"
-                        min="1"
-                        max="500"
-                        value="1"
-                        required
-                    >
+                        <input
+                            type="number"
+                            id="quantCurriculo"
+                            min="1"
+                            max="500"
+                            value="20"
+                        >
 
-                    <button
-                        class="btn btn-primary"
-                        id="importButton"
-                        type="button"
-                        onclick="importCurriculums()"
-                    >
-                        ↥ Importar do Gmail
-                    </button>
+                        <button
+                            class="btn btn-primary"
+                            id="importButton"
+                            type="button"
+                            onclick="importCurriculums()"
+                        >
+                            ↥ Importar do Gmail
+                        </button>
+                    </div>
                 </article>
+            </section>
 
-                <article class="operation-card">
-                    <div class="operation-icon dark">✦</div>
-                    <span class="operation-tag">ETAPA 02</span>
+            <div
+                class="notice"
+                id="notice"
+                role="status"
+                aria-live="polite"
+                hidden
+            ></div>
 
-                    <h3>Analisar candidatos</h3>
-                    <p>
-                        Executa a análise configurada no backend e apresenta
-                        o retorno recebido para avaliação da equipe de RH.
-                    </p>
-
-                    <button
-                        class="btn btn-dark"
-                        id="analyzeButton"
-                        type="button"
-                        onclick="analyzeCurriculums()"
-                    >
-                        Iniciar análise
-                    </button>
-                </article>
-            </div>
-
-            <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
-
-            <section class="curriculos-container" id="lista-curriculos">
+            <section class="curriculos-container section" id="lista-curriculos">
                 <div class="curriculos-header">
                     <div class="curriculos-heading">
                         <div class="curriculos-heading-icon">☷</div>
                         <div>
                             <h2>Currículos cadastrados</h2>
-                            <p>Remetentes encontrados no banco de dados</p>
+                            <p>Selecione um candidato para analisar individualmente.</p>
                         </div>
                     </div>
 
                     <div class="table-actions">
-                        <span class="total-badge" id="totalCurriculos">Carregando...</span>
+                        <span class="total-badge" id="totalCurriculos">
+                            Carregando...
+                        </span>
 
                         <button
                             class="btn-refresh"
@@ -1148,42 +1059,61 @@
                         <thead>
                             <tr>
                                 <th>Remetente do currículo</th>
+                                <th>Ação</th>
                             </tr>
                         </thead>
+
                         <tbody id="corpoTabelaCurriculos">
                             <tr>
-                                <td class="table-loading">Carregando currículos...</td>
+                                <td colspan="2" class="table-loading">
+                                    Carregando currículos...
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <section id="resultadoAnalise" class="resultado-analise" hidden>
-                <div class="analise-header">
-                    <h2>Análise do currículo</h2>
-                    <button onclick="fecharAnalise()" class="btn-fechar">
-                        Fechar
-                    </button>
-                </div>
 
-                <p id="remetenteAnalise"></p>
+                <section
+                    id="resultadoAnalise"
+                    class="resultado-analise"
+                    hidden
+                >
+                    <div class="analise-header">
+                        <h2>Análise do currículo</h2>
 
-                <div id="conteudoAnalise"></div>
+                        <button
+                            type="button"
+                            onclick="fecharAnalise()"
+                            class="btn-fechar"
+                        >
+                            Fechar
+                        </button>
+                    </div>
+
+                    <p id="remetenteAnalise"></p>
+                    <div id="conteudoAnalise"></div>
                 </section>
-            
-            <section class="results-card" id="resultados">
+            </section>
+
+            <section class="results-card section" id="resultados">
                 <div class="results-header">
                     <div>
-                        <h3>Resultados das análises</h3>
-                        <p id="resultSubtitle">Nenhuma operação executada nesta sessão.</p>
+                        <h3>Histórico de análises</h3>
+                        <p id="resultSubtitle">
+                            Nenhum currículo foi analisado nesta sessão.
+                        </p>
                     </div>
-                    <span class="counter" id="resultCounter">0 resultados</span>
+
+                    <span class="counter" id="resultCounter">
+                        0 resultados
+                    </span>
                 </div>
 
                 <div class="empty-state" id="emptyState">
-                    <strong>Nenhum resultado por enquanto</strong>
+                    <strong>Nenhuma análise realizada</strong>
                     <p>
-                        Importe os currículos e execute uma análise para visualizar
-                        os resultados aqui.
+                        Clique em "Analisar currículo" ao lado de um candidato
+                        para visualizar o resultado aqui.
                     </p>
                 </div>
 
@@ -1192,19 +1122,20 @@
 
             <footer class="footer">
                 <span>Motomar · Gestão de Recursos Humanos</span>
-                <span>Triagem de currículos</span>
+                <span>Triagem individual de currículos</span>
             </footer>
         </div>
     </main>
 
     <script>
+        // Endpoints do backend Flask
         const IMPORT_URL = "/push";
-        const ANALYZE_URL = "/analise";
         const CURRICULOS_URL = "/buscar-curriculos";
+        const ANALYZE_URL = "/analise";
 
         const importedCount = document.getElementById("importedCount");
         const analyzedCount = document.getElementById("analyzedCount");
-        const averageScore = document.getElementById("averageScore");
+        const totalStat = document.getElementById("totalStat");
         const resultsList = document.getElementById("resultsList");
         const emptyState = document.getElementById("emptyState");
         const resultCounter = document.getElementById("resultCounter");
@@ -1213,7 +1144,7 @@
 
         let results = [];
         let analyses = 0;
-        let importTotal = null;
+        let importTotal = 0;
 
         function showNotice(message, type = "info") {
             notice.textContent = message;
@@ -1221,8 +1152,12 @@
             notice.hidden = false;
         }
 
-        function setLoading(buttonId, loading, label) {
-            const button = document.getElementById(buttonId);
+        function hideNotice() {
+            notice.hidden = true;
+        }
+
+        function setLoading(button, loading, originalText) {
+            if (!button) return;
 
             if (loading) {
                 if (!button.dataset.originalText) {
@@ -1230,16 +1165,17 @@
                 }
 
                 button.disabled = true;
-                button.innerHTML = '<span class="spinner"></span> Processando...';
+                button.innerHTML =
+                    '<span class="spinner"></span> Processando...';
             } else {
                 button.disabled = false;
-                button.innerHTML = button.dataset.originalText || label;
+                button.innerHTML = button.dataset.originalText || originalText;
             }
         }
 
-        async function requestAPI(url) {
+        async function requestAPI(url, method = "POST") {
             const response = await fetch(url, {
-                method: "POST",
+                method,
                 headers: {
                     "Accept": "application/json"
                 }
@@ -1248,7 +1184,11 @@
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok || data.success === false) {
-                throw new Error(data.message || `Erro HTTP ${response.status}`);
+                throw new Error(
+                    data.message ||
+                    data.erro ||
+                    `Erro HTTP ${response.status}`
+                );
             }
 
             return data;
@@ -1259,12 +1199,22 @@
                 document.getElementById("quantCurriculo").value
             );
 
-            if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 500) {
-                showNotice("Informe uma quantidade entre 1 e 500.", "error");
+            if (
+                !Number.isInteger(quantidade) ||
+                quantidade < 1 ||
+                quantidade > 500
+            ) {
+                showNotice(
+                    "Informe uma quantidade entre 1 e 500.",
+                    "error"
+                );
                 return;
             }
 
-            setLoading("importButton", true, "↥ Importar do Gmail");
+            const button = document.getElementById("importButton");
+
+            setLoading(button, true, "↥ Importar do Gmail");
+
             showNotice(
                 `Importando currículos dos ${quantidade} primeiros e-mails...`,
                 "info"
@@ -1275,10 +1225,10 @@
                     `${IMPORT_URL}?quant_curriculo=${quantidade}`
                 );
 
-                const result = data.resultado;
+                const resultado = data.resultado;
 
-                if (Array.isArray(result)) {
-                    importTotal = result.length;
+                if (Array.isArray(resultado)) {
+                    importTotal = resultado.length;
                     importedCount.textContent = String(importTotal);
                 } else if (Number.isFinite(Number(data.quantidade))) {
                     importTotal = Number(data.quantidade);
@@ -1289,212 +1239,24 @@
 
                 results.unshift({
                     title: `Importação de currículos (${quantidade} e-mails consultados)`,
-                    content: result ?? data.message ?? data
+                    content: resultado ?? data.message ?? data
                 });
 
                 renderResults();
-
                 await carregarCurriculos();
 
-                showNotice(data.message || "Importação concluída.", "success");
+                showNotice(
+                    data.message || "Importação concluída.",
+                    "success"
+                );
             } catch (error) {
-                showNotice(`Falha ao importar currículos: ${error.message}`, "error");
+                showNotice(
+                    `Falha ao importar currículos: ${error.message}`,
+                    "error"
+                );
             } finally {
-                setLoading("importButton", false, "↥ Importar do Gmail");
+                setLoading(button, false, "↥ Importar do Gmail");
             }
-        }
-
-        async function analyzeCurriculums() {
-            setLoading("analyzeButton", true, "Iniciar análise");
-            showNotice(
-                "Analisando os currículos. Isso pode levar alguns instantes...",
-                "info"
-            );
-
-            try {
-                const data = await requestAPI(ANALYZE_URL);
-                const parsed = parseAnalyses(data.resultado ?? data);
-
-                if (!parsed.length) {
-                    showNotice(
-                        "A API respondeu, mas não retornou análises reconhecíveis. Verifique o retorno do endpoint.",
-                        "info"
-                    );
-
-                    results.unshift({
-                        title: "Retorno da análise",
-                        content: data
-                    });
-
-                    renderResults();
-                    return;
-                }
-
-                analyses += parsed.length;
-                analyzedCount.textContent = String(analyses);
-
-                for (const item of parsed) {
-                    results.unshift({
-                        title: item.nome || "Análise de candidato",
-                        content: item.content
-                    });
-                }
-
-                updateAverage(parsed);
-                renderResults();
-                showNotice(data.message || "Análise concluída.", "success");
-            } catch (error) {
-                showNotice(`Falha na análise: ${error.message}`, "error");
-            } finally {
-                setLoading("analyzeButton", false, "Iniciar análise");
-            }
-        }
-
-        function parseAnalyses(result) {
-            if (result === null || result === undefined) return [];
-
-            if (Array.isArray(result)) {
-                return result.flatMap(item => parseAnalyses(item));
-            }
-
-            if (typeof result === "string") {
-                const text = result.trim();
-                if (!text) return [];
-
-                try {
-                    return parseAnalyses(JSON.parse(text));
-                } catch (_) {
-                    return [{ nome: findName(text), content: text }];
-                }
-            }
-
-            if (typeof result === "object") {
-                if (result.type === "text" && typeof result.text === "string") {
-                    return parseAnalyses(result.text);
-                }
-
-                if (result.resultado !== undefined) {
-                    return parseAnalyses(result.resultado);
-                }
-
-                if (result.analise !== undefined) {
-                    return [{
-                        nome: result.nome || result.candidato || "",
-                        content: getContent(result.analise)
-                    }];
-                }
-
-                if (result.content !== undefined) {
-                    return parseAnalyses(result.content);
-                }
-
-                if (result.text !== undefined) {
-                    return parseAnalyses(result.text);
-                }
-
-                const content = getContent(result);
-
-                if (content) {
-                    return [{
-                        nome: result.nome || result.candidato || "",
-                        content
-                    }];
-                }
-            }
-
-            return [];
-        }
-
-        function getContent(value) {
-            if (typeof value === "string") return value;
-
-            if (Array.isArray(value)) {
-                return value
-                    .map(item => {
-                        if (typeof item === "string") return item;
-                        if (item && typeof item.text === "string") return item.text;
-                        if (item && typeof item.content === "string") return item.content;
-                        return "";
-                    })
-                    .filter(Boolean)
-                    .join("\n\n");
-            }
-
-            if (value && typeof value === "object") {
-                if (typeof value.text === "string") return value.text;
-                if (typeof value.content === "string") return value.content;
-            }
-
-            return "";
-        }
-
-        function findName(content) {
-            const match = content.match(
-                /(?:^|\n)\s*(?:\*\*)?Nome(?:\*\*)?\s*[:\-]\s*(.+)/i
-            );
-
-            return match ? match[1].replace(/\*\*/g, "").trim() : "";
-        }
-
-        function getScore(item) {
-            const text = `${item.nome || ""}\n${item.content || ""}`;
-
-            const match = text.match(
-                /(?:compatibilidade|pontuação|pontuacao|score)(?:\s+de\s+0\s+a\s+100)?\s*[:\-]\s*(\d{1,3})\s*%?/i
-            );
-
-            if (!match) return null;
-
-            const score = Number(match[1]);
-            return score >= 0 && score <= 100 ? score : null;
-        }
-
-        function updateAverage(items) {
-            const scores = items
-                .map(getScore)
-                .filter(score => score !== null);
-
-            if (!scores.length) return;
-
-            const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-            averageScore.textContent = `${Math.round(average)}%`;
-        }
-
-        function renderResults() {
-            resultsList.replaceChildren();
-            emptyState.hidden = results.length > 0;
-
-            resultCounter.textContent =
-                `${results.length} ${results.length === 1 ? "resultado" : "resultados"}`;
-
-            resultSubtitle.textContent = results.length
-                ? "Retorno recebido das operações executadas."
-                : "Nenhuma operação executada nesta sessão.";
-
-            for (const item of results) {
-                const article = document.createElement("article");
-                article.className = "result-item";
-
-                const title = document.createElement("h4");
-                title.textContent = item.title;
-
-                const pre = document.createElement("pre");
-                pre.textContent = typeof item.content === "string"
-                    ? item.content
-                    : JSON.stringify(item.content, null, 2);
-
-                article.append(title, pre);
-                resultsList.appendChild(article);
-            }
-        }
-
-        function clearResults() {
-            results = [];
-            analyses = 0;
-            analyzedCount.textContent = "0";
-            averageScore.textContent = "—";
-            renderResults();
-            showNotice("Os resultados exibidos nesta sessão foram limpos.", "info");
         }
 
         async function carregarCurriculos() {
@@ -1507,98 +1269,284 @@
 
             const loadingRow = document.createElement("tr");
             const loadingCell = document.createElement("td");
-            loadingCell.colSpan = 1;
+
+            loadingCell.colSpan = 2;
             loadingCell.className = "table-loading";
-            loadingCell.textContent = "Buscando currículos no banco de dados...";
+            loadingCell.textContent =
+                "Buscando currículos no banco de dados...";
+
             loadingRow.appendChild(loadingCell);
             tbody.appendChild(loadingRow);
 
             refreshButton.disabled = true;
 
             try {
-                const resposta = await fetch(CURRICULOS_URL, {
+                const response = await fetch(CURRICULOS_URL, {
                     headers: {
                         "Accept": "application/json"
                     }
                 });
 
-                const dados = await resposta.json();
+                const dados = await response.json();
 
-                if (!resposta.ok) {
+                if (!response.ok) {
                     throw new Error(
-                        dados.erro || "Não foi possível buscar os currículos."
+                        dados.erro ||
+                        dados.message ||
+                        "Não foi possível buscar os currículos."
                     );
                 }
 
                 if (!Array.isArray(dados)) {
-                    throw new Error("A API não retornou uma lista de currículos.");
+                    throw new Error(
+                        "A API não retornou uma lista de currículos."
+                    );
                 }
 
                 tbody.replaceChildren();
 
-                if (dados.length === 0) {
-                    total.textContent = "0 currículos";
+                total.textContent =
+                    `${dados.length} ${dados.length === 1 ? "currículo" : "currículos"}`;
 
+                totalStat.textContent = String(dados.length);
+
+                if (dados.length === 0) {
                     const row = document.createElement("tr");
                     const cell = document.createElement("td");
-                    cell.colSpan = 1;
+
+                    cell.colSpan = 2;
                     cell.className = "table-empty";
-                    cell.textContent = "Nenhum currículo cadastrado no banco de dados.";
+                    cell.textContent =
+                        "Nenhum currículo cadastrado no banco de dados.";
+
                     row.appendChild(cell);
                     tbody.appendChild(row);
                     return;
                 }
 
-                const fragment = document.createDocumentFragment();
-
-                for (const curriculo of dados) {
+                dados.forEach(curriculo => {
                     const row = document.createElement("tr");
-                    const cell = document.createElement("td");
-                    const wrapper = document.createElement("div");
-                    const avatar = document.createElement("span");
-                    const nome = document.createElement("span");
+                    const nomeCell = document.createElement("td");
+                    const acaoCell = document.createElement("td");
 
-                    wrapper.className = "remetente-cell";
-                    avatar.className = "remetente-avatar";
-                    nome.className = "remetente-nome";
+                    nomeCell.className = "remetente";
 
-                    const remetente = String(
-                        curriculo.remetente ?? "Remetente não informado"
-                    );
+                    const remetente =
+                        curriculo.remetente ||
+                        curriculo.nome ||
+                        curriculo.email ||
+                        "Remetente não informado";
 
-                    avatar.textContent = remetente.trim()
-                        ? remetente.trim().charAt(0).toUpperCase()
-                        : "?";
+                    nomeCell.textContent = remetente;
 
-                    nome.textContent = remetente;
+                    const id =
+                        curriculo.id ??
+                        curriculo.candidato_id ??
+                        curriculo.doc_id;
 
-                    wrapper.append(avatar, nome);
-                    cell.appendChild(wrapper);
-                    row.appendChild(cell);
-                    fragment.appendChild(row);
-                }
+                    const botao = document.createElement("button");
 
-                tbody.appendChild(fragment);
-                total.textContent =
-                    `${dados.length} ${dados.length === 1 ? "currículo" : "currículos"}`;
+                    botao.type = "button";
+                    botao.className = "btn btn-analisar";
+                    botao.textContent = "✦ Analisar currículo";
 
-            } catch (erro) {
+                    if (id === undefined || id === null || id === "") {
+                        botao.disabled = true;
+                        botao.title =
+                            "Este registro não possui um ID para análise.";
+                    } else {
+                        botao.addEventListener("click", () => {
+                            analisarCurriculo(id, remetente, botao);
+                        });
+                    }
+
+                    acaoCell.appendChild(botao);
+                    row.append(nomeCell, acaoCell);
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
                 tbody.replaceChildren();
 
                 const row = document.createElement("tr");
                 const cell = document.createElement("td");
-                cell.colSpan = 1;
+
+                cell.colSpan = 2;
                 cell.className = "table-empty";
-                cell.textContent = `Erro ao carregar currículos: ${erro.message}`;
+                cell.textContent = `Erro ao carregar currículos: ${error.message}`;
 
                 row.appendChild(cell);
                 tbody.appendChild(row);
-                total.textContent = "Erro ao carregar";
+
+                total.textContent = "Erro";
+                totalStat.textContent = "—";
+
+                showNotice(
+                    `Não foi possível carregar a lista: ${error.message}`,
+                    "error"
+                );
             } finally {
                 refreshButton.disabled = false;
             }
         }
 
+        async function analisarCurriculo(id, remetente, botao) {
+            const resultadoAnalise =
+                document.getElementById("resultadoAnalise");
+
+            const remetenteAnalise =
+                document.getElementById("remetenteAnalise");
+
+            const conteudoAnalise =
+                document.getElementById("conteudoAnalise");
+
+            setLoading(botao, true, "✦ Analisar currículo");
+
+            resultadoAnalise.hidden = false;
+            remetenteAnalise.textContent = `Candidato: ${remetente}`;
+            conteudoAnalise.textContent = "Analisando currículo. Aguarde...";
+
+            resultadoAnalise.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            showNotice(
+                `Iniciando análise individual de ${remetente}...`,
+                "info"
+            );
+
+            try {
+                const data = await requestAPI(
+                    `${ANALYZE_URL}/${encodeURIComponent(id)}`
+                );
+
+                const analise = data.resultado ?? data.analise ?? data;
+
+                conteudoAnalise.replaceChildren();
+                exibirConteudo(conteudoAnalise, analise);
+
+                analyses += 1;
+                analyzedCount.textContent = String(analyses);
+
+                results.unshift({
+                    title: `Análise: ${remetente}`,
+                    content: analise
+                });
+
+                renderResults();
+
+                showNotice(
+                    `Análise de ${remetente} concluída.`,
+                    "success"
+                );
+
+            } catch (error) {
+                conteudoAnalise.textContent =
+                    `Não foi possível analisar este currículo: ${error.message}`;
+
+                showNotice(
+                    `Falha na análise de ${remetente}: ${error.message}`,
+                    "error"
+                );
+            } finally {
+                setLoading(botao, false, "✦ Analisar currículo");
+            }
+        }
+
+        function exibirConteudo(container, valor) {
+            if (valor === null || valor === undefined) {
+                container.textContent = "A análise não retornou conteúdo.";
+                return;
+            }
+
+            if (typeof valor === "string") {
+                container.textContent = valor;
+                return;
+            }
+
+            if (Array.isArray(valor)) {
+                valor.forEach((item, index) => {
+                    const bloco = document.createElement("div");
+                    bloco.style.marginBottom = "14px";
+
+                    const titulo = document.createElement("h3");
+                    titulo.textContent = `Resultado ${index + 1}`;
+
+                    const texto = document.createElement("pre");
+                    texto.textContent =
+                        typeof item === "string"
+                            ? item
+                            : JSON.stringify(item, null, 2);
+
+                    bloco.append(titulo, texto);
+                    container.appendChild(bloco);
+                });
+                return;
+            }
+
+            if (typeof valor === "object") {
+                if (valor.type === "text" && typeof valor.text === "string") {
+                    container.textContent = valor.text;
+                    return;
+                }
+
+                if (valor.analise !== undefined) {
+                    exibirConteudo(container, valor.analise);
+                    return;
+                }
+
+                if (valor.resultado !== undefined) {
+                    exibirConteudo(container, valor.resultado);
+                    return;
+                }
+
+                const pre = document.createElement("pre");
+                pre.textContent = JSON.stringify(valor, null, 2);
+                container.appendChild(pre);
+                return;
+            }
+
+            container.textContent = String(valor);
+        }
+
+        function fecharAnalise() {
+            document.getElementById("resultadoAnalise").hidden = true;
+        }
+
+        function renderResults() {
+            resultsList.replaceChildren();
+
+            emptyState.hidden = results.length > 0;
+
+            resultCounter.textContent =
+                `${results.length} ${results.length === 1 ? "resultado" : "resultados"}`;
+
+            resultSubtitle.textContent = results.length
+                ? "Resultados das operações executadas nesta sessão."
+                : "Nenhum currículo foi analisado nesta sessão.";
+
+            results.forEach(item => {
+                const article = document.createElement("article");
+                article.className = "result-item";
+
+                const title = document.createElement("h4");
+                title.textContent = item.title;
+
+                const pre = document.createElement("pre");
+
+                if (typeof item.content === "string") {
+                    pre.textContent = item.content;
+                } else {
+                    pre.textContent = JSON.stringify(item.content, null, 2);
+                }
+
+                article.append(title, pre);
+                resultsList.appendChild(article);
+            });
+        }
+
+        // Carrega a lista assim que a página abre.
         document.addEventListener("DOMContentLoaded", carregarCurriculos);
     </script>
 </body>

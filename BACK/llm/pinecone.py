@@ -10,42 +10,56 @@ from langchain_huggingface          import HuggingFaceEmbeddings
 from langchain_text_splitters       import RecursiveCharacterTextSplitter
 
 load_dotenv()
+def splitter(curriculo_id=None):
+    from firebase_admin import firestore
 
-def splitter():
+    db = firestore.client()
+    colecao = db.collection("curriculos")
 
+    if curriculo_id is not None:
+        doc = colecao.document(str(curriculo_id)).get()
 
-    # aqui a gente vai dividir o curriculo em chunks para fazer o embendding e dps armazenar no bv
-    curriculos = fb_get_curriculum()
+        if not doc.exists:
+            return []
 
+        registro = doc.to_dict()
+        registro["id"] = doc.id
+        curriculos = [registro]
+
+    else:
+        curriculos = []
+
+        for doc in colecao.stream():
+            registro = doc.to_dict()
+            registro["id"] = doc.id
+            curriculos.append(registro)
 
     text_splitter = RecursiveCharacterTextSplitter(
-
-        chunk_size    = 500,
-        chunk_overlap = 50
+        chunk_size=500,
+        chunk_overlap=50
     )
 
     split = []
 
-    #pegando o texto ja separado do get_curriculum() e corta ele, alem disso ele manda o id como metadata
     for curriculo in curriculos:
+        data = curriculo.get("conteudo", curriculo)
+        texto = data.get("curriculo", "")
 
-        data   = curriculo["conteudo"]
+        if not texto or not texto.strip():
+            continue
+
         chunks = text_splitter.create_documents(
-
-            [data["curriculo"]],
-        
-        metadatas = [{
-
-                "id": curriculo["id"],
-                "remetente": data["remetente"]
-
+            [texto],
+            metadatas=[{
+                "id": str(curriculo["id"]),
+                "remetente": data.get("remetente", "")
             }]
         )
 
         split.extend(chunks)
 
+    return split
 
-    return split 
 
 
 

@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
 
+from firebase_admin import firestore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents       import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 from BACK.tools.tools       import (add_UserTool, get_userTool, edit_Usertool, delete_Usertool,)
-from BACK.llm.pinecone      import splitter, pinecone
+
 
 load_dotenv()
 
@@ -315,98 +316,67 @@ def extrair_texto(conteudo):
     return ""
 
 
+def curriculo_llm_process(curriculo_id):
+    
+    db = firestore.client()
 
-def curriculo_llm_process(curriculo_id=None):
-    doc_splitter = splitter()
+    doc = (
+        db.collection("curriculos")
+        .document(str(curriculo_id))
+        .get()
+    )
 
-    if not doc_splitter:
-        return [] if curriculo_id is None else {
-            "erro": "Nenhum currículo encontrado para análise."
-        }
+    if not doc.exists:
+        return {"erro": "Currículo não encontrado."}
 
-    vector_store = pinecone(doc_splitter)
+    registro = doc.to_dict()
+    dados = registro.get("conteudo", registro)
+
+    texto = dados.get("curriculo", "")
+    remetente = dados.get("remetente", "")
+
+    if not texto.strip():
+        return {"erro": "Currículo sem texto para análise."}
 
     model = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash-lite"
     )
 
-    ids_curriculos = list(dict.fromkeys(
-        str(doc.metadata["id"])
-        for doc in doc_splitter
-        if doc.metadata.get("id") is not None
-    ))
+    prompt = f"""
+Analise o currículo para a vaga de Assistente da
+Administração da MOTOMAR - Honda.
 
-    if curriculo_id is not None:
-        curriculo_id = str(curriculo_id)
-
-        if curriculo_id not in ids_curriculos:
-            return {
-                "erro": "Currículo não encontrado no índice de documentos."
-            }
-
-        ids_curriculos = [curriculo_id]
-
-    resultados = []
-
-    for id_curriculo in ids_curriculos:
-        documentos = vector_store.similarity_search(
-            "currículo completo experiência profissional CNH email",
-            k=10,
-            filter={"id": id_curriculo}
-        )
-
-        if not documentos:
-            continue
-
-        contexto = "\n\n".join(
-            doc.page_content for doc in documentos
-        )
-
-        prompt = f"""
-Analise o currículo abaixo para a vaga de Assistente da Administração
-da MOTOMAR - Honda.
-
-REQUISITOS DA VAGA:
+REQUISITOS:
 - CNH A/B é requisito obrigatório.
 - Experiência com entrega é um diferencial.
 - Entrega de motos entre unidades.
 - Seguir rotas e cronogramas.
 - Carregar e descarregar veículos.
 
-CURRÍCULO:
-{contexto}
-
-INSTRUÇÕES:
-- Analise somente as informações presentes no currículo.
-- Não invente informações sobre o candidato.
+REGRAS:
+- Analise somente as informações fornecidas.
+- Não invente informações.
 - Se a CNH não estiver mencionada, informe:
   "CNH não informada — requisito não confirmado".
-- Não considere ausência de informação como prova de falta de experiência.
-- Apresente a análise em português, de forma clara e objetiva.
+- Não trate ausência de informação como falta de experiência.
+- Responda em português, de forma objetiva.
 
-INFORME:
-- Email do candidato.
+Informe:
+- Email do candidato, se identificado.
 - Experiências relevantes.
 - Pontos positivos.
 - Pontos de atenção.
 - Compatibilidade de 0 a 100.
+
+REMETENTE: {remetente}
+
+CURRÍCULO:
+{texto}
 """
 
-        resposta = model.invoke(prompt)
-        conteudo = extrair_texto(resposta.content)
+    resposta = model.invoke(prompt)
 
-        resultados.append({
-            "candidato_id": id_curriculo,
-            "analise": conteudo
-        })
-
-    if curriculo_id is not None:
-        if not resultados:
-            return {
-                "erro": "Não foi possível recuperar o conteúdo deste currículo."
-            }
-
-        return resultados[0]
-
-    return resultados
-
+    return {
+        "candidato_id": str(curriculo_id),
+        "analise": extrair_texto(resposta.content)
+    }

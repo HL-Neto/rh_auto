@@ -224,19 +224,19 @@ def processes_email_curriculum():
 
 
 "envia para llm analisar"
-@app.route("/analise", methods=["POST"])
-def analise_curriculo():
- 
+@app.route("/analise/<curriculo_id>", methods=["POST"])
+def analise_curriculo(curriculo_id):
 
-    resultado = curriculo_llm_process()
-   
-        
-    return jsonify({
-        "success": True,
-        "message": "Análise concluída",
-        "resultado": resultado
-    }), 200
     
+        resultado = curriculo_llm_process(curriculo_id)
+
+
+        return jsonify({
+            "success": True,
+            "message": "Análise concluída.",
+            "resultado": resultado
+        }), 200
+
     
 @app.route("/buscar-curriculos", methods = ["GET"])
 def list_curriculos():
