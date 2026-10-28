@@ -8,3 +8,4 @@ firebase-admin
 fpdf2
 pypdf
 pdfplumber
+google-auth-oauthlib
