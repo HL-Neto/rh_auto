@@ -1,293 +1,26 @@
-from dotenv import load_dotenv
 
+import logging
+
+from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.agents       import create_agent
-from langchain_google_genai import ChatGoogleGenerativeAI
-from BACK.tools.tools       import (add_UserTool, get_userTool, edit_Usertool, delete_Usertool,)
-from BACK.llm.pinecone      import splitter, pinecone
+from langchain.agents import create_agent
+
+from BACK.tools.tools import (
+    add_UserTool,
+    get_userTool,
+    edit_Usertool,
+    delete_Usertool
+)
+
+from BACK.modules.gmail_module import fb_get_curriculum
+
 
 load_dotenv()
 
-"""
-    AS LLMS ULTILIZADAS
-    basicamente temos 3llms , uma para o processessamento dos dados dentro do pdf , e a outra para auxilio do usuário, e aultima para processar 
-    os curriculos , ambos pussem a capacidade de alterar o banco de dados, cada um com suas limmitações
-
-"""
-
-
 
 # ============================================================
-# IA DE PROCESSAMENTO DE BONUS
+# UTILITÁRIO
 # ============================================================
-
-
-
-def bonus_llm_process(pdf):
-
-
-
-    model = ChatGoogleGenerativeAI(
-        model="gemini-3.5-flash-lite"
-    )
-
-    prompt = """
-    
-        Você é responsável por processar os dados de vendas dos vendedores.
-
-        OBJETIVO
-        
-        
-        1 - voce vai procura na varivável pdf:
-            - lista de vendedores
-            - motos vendidas
-            - meta
-            - quantidade de POPs
-            - tipo de vendas
-            - vendas no cartão
-            - vendas em outras formas de pagamento
-        
-        2 - Ultilize a ferramente get_Usertool 
-            - verifique se o vendedor ja existe no banco de dados
-            - se ja existir , invés de adicionar , você vai ultilizar a ferramente edit_Usertool
-            para adicionar as novas informações desse usuário, altere só as informações que diferem das nova
-            
-            exemplo: um vendedor joão da silva, ele ja existe no banco de dados , a meta dele ta diferente da
-            meta antiga, os outros dados são o mesmo,  então altere só a meta.
-        
-        
-
-                
-        3 - Ultilize a ferramenta add_UserTool passando todos os dados que você encontrou de forma correta :
-            - quantidade total de motos vendidas
-            - meta
-            - quantidade de POPs
-            - vendas no cartão
-            - vendas em outras formas
-            
-        4 — IDENTIFICAÇÃO DA META
-
-        Para cada vendedor encontrado no PDF **"VENDAS DE MOTOS POR EQUIPES"**, localize a coluna **"META MÓVEL"** correspondente ao vendedor.
-
-        Utilize o valor encontrado em  "META MÓVEL" como a meta de motos do vendedor.
-        A meta deve ser associada ao vendedor correto, respeitando a tabela/equipe em que ele aparece.
-        Não invente, estime ou calcule uma meta caso ela não esteja informada no PDF.
-        Se o vendedor não possuir uma **"META MÓVEL"** identificável, não cadastre esse vendedor no banco de dados.
-
-        5 — CLASSIFICAÇÃO DO TIPO DE VENDEDOR
-
-        Existem somente 3 tipos de vendedores no sistema:
-
-          `interno`
-          `online`
-          `externo`
-
-        A classificação deve ser feita de acordo com o **título da tabela/equipe** em que o vendedor aparece no PDF.
-
-        ### Regras obrigatórias:
-
-        Se o vendedor estiver na tabela **"SHOWROOM"**, defina:
-        `tipo = "interno"`
-
-        Se o vendedor estiver na tabela **"VENDAS ONLINE"**, defina:
-        `tipo = "online"`
-
-        Se o vendedor estiver na tabela **"EXTERNA"**, defina:
-        `tipo = "externo"`
-
-        IMPORTANTE:
-
-        Não classifique o tipo pelo nome do vendedor.
-        Não faça suposições sobre o tipo.
-        O tipo deve ser determinado exclusivamente pela tabela/equipe onde o vendedor foi encontrado.
-        Se o vendedor aparecer em mais de uma tabela, considere a tabela correspondente aos dados que estão sendo processados e mantenha a classificação consistente.
-        Os valores aceitos para o campo `tipo` são **somente**: `interno`, `online` ou `externo`.
-        Nunca utilize outros valores como `"showroom"`, `"vendas online"` ou `"externa"` no campo `tipo`.
-
-        
-        IMPORTANTE:
-
-        Se um vendedor possui 10 motos vendidas e 2 foram no cartão,
-        obrigatoriamente as outras vendas serão 8.
-
-        Portanto:
-
-        vendas_card + vendas_other = motos
-
-        3 - Depois de extrair os dados dos PDFs, utilize a ferramenta
-        'add_UserTool' para cadastrar os vendedores.
-
-        4 - NÃO invente informações.
-
-        5 - Só cadastre vendedores que possuam uma meta na lista abaixo.
-
-        6 - Compare os nomes ignorando diferenças entre letras maiúsculas,
-        minúsculas e acentos quando necessário.
-
-        7 - Depois dos cadastros, utilize 'get_userTool' para consultar
-        todos os vendedores cadastrados.
-
-        
-        
-         
-    """
-
-    print("\n[1] Prompt dos PDFs criado")
-
-    agent = create_agent(
-        model=model,
-        tools=[
-            add_UserTool,
-            get_userTool,
-            
-        ]
-    )
-
-    answer = agent.invoke({
-        "messages": [
-            ("system", prompt),
-            (
-                "user",
-                f"""
-                Estes são os dados extraidos dos pdfs:
-                
-                    {pdf}
-                
-                Leia os dados acima 
-                
-                Extraia os vendedores, meta, motos, POPs, vendas no cartão, outras vendas e tipo. 
-                Depois cadastre ou edite os vendedores utilizando as ferramentas disponíveis. 
-                Por fim, consulte os vendedores cadastrados.
-                
-                """
-            )
-        ]
-    })
-
-    content = answer["messages"][-1].content
-    
-    " formatação da resposta da llm"
-    if isinstance(content, list):
-        content = "".join(
-            item.get("text", "")
-            if isinstance(item, dict)
-            else str(item)
-            for item in content
-        )
-        
-
-    return str(content)
-
-
-# ============================================================
-# IA DE COMANDOS
-# ============================================================
-
-def command_process(context: str):
-
-  
-    model = ChatGoogleGenerativeAI(
-        model="gemini-3.5-flash-lite"
-    )
-
-    prompt = f"""
-        
-        Você é uma IA responsável pelo gerenciamento dos vendedores
-        armazenados no banco de dados.
-
-        Você só pode executar comandos relacionados ao banco de dados
-        de vendedores.
-
-        Ações permitidas:
-
-        1. CRIAR
-        2. DELETAR
-        3. EDITAR
-        4. CONSULTAR
-
-
-        Você possui as seguintes ferramentas:
-
-        - add_UserTool
-        - get_userTool
-        - edit_Usertool
-        - delete_userTool
-
-        NÃO utilize ferramentas relacionadas aos PDFs.
-
-        NÃO invente dados.
-
-        Se o usuário pedir para criar um vendedor, utilize
-        add_UserTool somente se todas as informações necessárias
-        estiverem disponíveis.
-
-        Se o usuário pedir para consultar vendedores, utilize
-        get_userTool.
-
-        Se o usuário pedir para editar um vendedor, utilize
-        edit_Usertool.
-        
-        
-        Se o usuário pedir para deletar um vendedor, utilize
-        delete_Usertool.
-        
-        Se  o usuário desejar deletar todo o banco de dados , ultilize a ferramente get_userTool para pegar todos os nomes dos vendedores no banco de dados , 
-        depois ultilize a ferramenta delete_userTool passando o nome de cada vendedor para excluir um por um
-
-        Se o comando não tiver relação com vendedores ou com
-        as operações CRIAR, DELETAR, EDITAR ou CONSULTAR,
-        responda:
-
-        "Não posso executar essa atividade. Posso apenas realizar
-        operações relacionadas aos vendedores no banco de dados."
-
-        COMANDO DO USUÁRIO:
-
-        {context}
-    
-    """
-
-    print("\n[1] Prompt criado")
-    print(prompt)
-
-    agent = create_agent(
-        model=model,
-        tools=[
-            add_UserTool,
-            get_userTool,
-            edit_Usertool,
-            delete_Usertool
-        ]
-    )
-
-    answer = agent.invoke({
-        "messages": [
-            ("system", prompt),
-            ("user", context)
-        ]
-    })
-
-    content = answer["messages"][-1].content
-
-    "formatação da resposta da ia"
-    if isinstance(content, list):
-        content = "".join(
-            item.get("text", "")
-            if isinstance(item, dict)
-            else str(item)
-            for item in content
-        )
-
-    return str(content)
-
-
-
-
-# ============================================================
-# IA DE PROCESSAMENTO DE CURRICULOS
-# ============================================================
-
-
 
 def extrair_texto(conteudo):
     if isinstance(conteudo, str):
@@ -300,11 +33,11 @@ def extrair_texto(conteudo):
             if isinstance(parte, str):
                 partes.append(parte)
 
-            elif isinstance(parte, dict):
-                if parte.get("type") == "text":
-                    texto = parte.get("text", "")
-                    if isinstance(texto, str):
-                        partes.append(texto)
+            elif isinstance(parte, dict) and parte.get("type") == "text":
+                texto = parte.get("text", "")
+
+                if isinstance(texto, str):
+                    partes.append(texto)
 
         return "\n".join(partes)
 
@@ -315,98 +48,271 @@ def extrair_texto(conteudo):
     return ""
 
 
+# ============================================================
+# IA DE PROCESSAMENTO DE BÔNUS
+# ============================================================
 
-def curriculo_llm_process(curriculo_id=None):
-    doc_splitter = splitter()
-
-    if not doc_splitter:
-        return [] if curriculo_id is None else {
-            "erro": "Nenhum currículo encontrado para análise."
-        }
-
-    vector_store = pinecone(doc_splitter)
-
+def bonus_llm_process(pdf):
     model = ChatGoogleGenerativeAI(
         model="gemini-3.5-flash-lite"
     )
 
-    ids_curriculos = list(dict.fromkeys(
-        str(doc.metadata["id"])
-        for doc in doc_splitter
-        if doc.metadata.get("id") is not None
-    ))
+    prompt = """
+Você é responsável por processar os dados de vendas dos vendedores.
 
-    if curriculo_id is not None:
-        curriculo_id = str(curriculo_id)
+OBJETIVO:
+1. Extraia dos PDFs os vendedores, motos vendidas, meta, POPs,
+   tipo de vendas, vendas no cartão e outras formas de pagamento.
+2. Use get_UserTool para verificar se o vendedor já existe.
+3. Se existir, utilize edit_Usertool para atualizar somente os dados
+   que mudaram.
+4. Se não existir, utilize add_UserTool para cadastrá-lo.
 
-        if curriculo_id not in ids_curriculos:
+IDENTIFICAÇÃO DA META:
+- Utilize a coluna "META MÓVEL" da tabela "VENDAS DE MOTOS POR EQUIPES".
+- Não invente nem estime metas.
+- Não cadastre vendedores sem meta identificável.
+
+TIPO DE VENDEDOR:
+- Tabela SHOWROOM: tipo "interno".
+- Tabela VENDAS ONLINE: tipo "online".
+- Tabela EXTERNA: tipo "externo".
+- Não determine o tipo pelo nome do vendedor.
+
+REGRAS:
+- vendas_card + vendas_other = motos.
+- Não invente informações.
+- Compare nomes ignorando maiúsculas, minúsculas e acentos.
+- Consulte os vendedores cadastrados ao terminar.
+- Os únicos tipos permitidos são interno, online e externo.
+"""
+
+    agent = create_agent(
+        model=model,
+        tools=[
+            add_UserTool,
+            get_userTool,
+            edit_Usertool
+        ]
+    )
+
+    resposta = agent.invoke({
+        "messages": [
+            ("system", prompt),
+            (
+                "user",
+                f"""
+Estes são os dados extraídos dos PDFs:
+
+{pdf}
+
+Extraia as informações e cadastre ou atualize os vendedores
+utilizando as ferramentas disponíveis. Ao terminar, consulte
+os vendedores cadastrados.
+"""
+            )
+        ]
+    })
+
+    return extrair_texto(resposta["messages"][-1].content)
+
+
+# ============================================================
+# IA DE COMANDOS
+# ============================================================
+
+def command_process(context: str):
+    model = ChatGoogleGenerativeAI(
+        model="gemini-3.5-flash-lite"
+    )
+
+    prompt = f"""
+Você é uma IA responsável pelo gerenciamento dos vendedores
+armazenados no banco de dados.
+
+Ações permitidas:
+1. CRIAR
+2. DELETAR
+3. EDITAR
+4. CONSULTAR
+
+Ferramentas disponíveis:
+- add_UserTool
+- get_userTool
+- edit_Usertool
+- delete_Usertool
+
+Não utilize ferramentas relacionadas a PDFs.
+Não invente dados.
+
+Para criar, utilize add_UserTool quando os dados necessários
+estiverem disponíveis.
+Para consultar, utilize get_userTool.
+Para editar, utilize edit_Usertool.
+Para deletar, utilize delete_Usertool.
+
+Se o usuário solicitar a exclusão de todos os vendedores:
+consulte todos com get_userTool e exclua-os individualmente.
+
+Se o comando não estiver relacionado aos vendedores, responda:
+"Não posso executar essa atividade. Posso apenas realizar
+operações relacionadas aos vendedores no banco de dados."
+
+COMANDO DO USUÁRIO:
+{context}
+"""
+
+    agent = create_agent(
+        model=model,
+        tools=[
+            add_UserTool,
+            get_userTool,
+            edit_Usertool,
+            delete_Usertool
+        ]
+    )
+
+    resposta = agent.invoke({
+        "messages": [
+            ("system", prompt),
+            ("user", context)
+        ]
+    })
+
+    return extrair_texto(resposta["messages"][-1].content)
+
+
+# ============================================================
+# IA DE ANÁLISE INDIVIDUAL DE CURRÍCULOS
+# ============================================================
+
+def curriculo_llm_process(curriculo_id):
+    try:
+        if not curriculo_id:
             return {
-                "erro": "Currículo não encontrado no índice de documentos."
+                "erro": "O ID do currículo não foi informado."
             }
 
-        ids_curriculos = [curriculo_id]
+        # Busca diretamente o documento pelo ID no Firestore.
+        curriculo = fb_get_curriculum(str(curriculo_id))
 
-    resultados = []
+        if not curriculo:
+            return {
+                "erro": (
+                    f"Nenhum currículo foi encontrado com o ID "
+                    f"{curriculo_id}."
+                )
+            }
 
-    for id_curriculo in ids_curriculos:
-        documentos = vector_store.similarity_search(
-            "currículo completo experiência profissional CNH email",
-            k=10,
-            filter={"id": id_curriculo}
-        )
+        # Os dados podem estar dentro de "conteudo".
+        dados = curriculo.get("conteudo", curriculo)
 
-        if not documentos:
-            continue
+        if not isinstance(dados, dict):
+            return {
+                "erro": "O documento do currículo possui formato inválido."
+            }
 
-        contexto = "\n\n".join(
-            doc.page_content for doc in documentos
+        texto = dados.get("curriculo", "")
+        remetente = dados.get("remetente", "Não informado")
+
+        if not isinstance(texto, str):
+            texto = extrair_texto(texto)
+
+        if not texto.strip():
+            return {
+                "erro": (
+                    "O documento foi encontrado, mas não contém "
+                    "texto de currículo para análise."
+                )
+            }
+
+        model = ChatGoogleGenerativeAI(
+            model="gemini-3.5-flash-lite"
         )
 
         prompt = f"""
-Analise o currículo abaixo para a vaga de Assistente da Administração
-da MOTOMAR - Honda.
+Você é um profissional de Recursos Humanos da MOTOMAR Honda.
+Analise este currículo para a vaga de Assistente da Administração.
 
 REQUISITOS DA VAGA:
-- CNH A/B é requisito obrigatório.
-- Experiência com entrega é um diferencial.
-- Entrega de motos entre unidades.
-- Seguir rotas e cronogramas.
-- Carregar e descarregar veículos.
+- CNH A/B: requisito obrigatório.
+- Experiência com entregas: diferencial.
+- Transporte de motocicletas entre unidades.
+- Cumprimento de rotas e cronogramas.
+- Carregamento e descarregamento de veículos.
+
+REMETENTE DO E-MAIL:
+{remetente}
 
 CURRÍCULO:
-{contexto}
+{texto}
 
-INSTRUÇÕES:
-- Analise somente as informações presentes no currículo.
-- Não invente informações sobre o candidato.
-- Se a CNH não estiver mencionada, informe:
-  "CNH não informada — requisito não confirmado".
-- Não considere ausência de informação como prova de falta de experiência.
-- Apresente a análise em português, de forma clara e objetiva.
+REGRAS OBRIGATÓRIAS:
+1. Analise exclusivamente as informações presentes no currículo.
+2. Nunca invente dados, experiências ou qualificações.
+3. Se o e-mail não estiver disponível, escreva "Não informado".
+4. Se a CNH não estiver mencionada, escreva
+   "Não informada — requisito não confirmado".
+5. A ausência de informação não prova que o candidato não possui
+   aquela qualificação.
+6. Seja profissional, objetivo e específico.
+7. Justifique a pontuação com evidências do currículo.
+8. Não descarte automaticamente o candidato por falta de informação.
+9. Não inclua informações pessoais irrelevantes para a avaliação.
+10. Retorne somente a análise, sem introduções genéricas.
 
-INFORME:
-- Email do candidato.
-- Experiências relevantes.
-- Pontos positivos.
-- Pontos de atenção.
-- Compatibilidade de 0 a 100.
+FORMATO OBRIGATÓRIO:
+
+EMAIL DO CANDIDATO:
+Informe o e-mail encontrado ou "Não informado".
+
+EXPERIÊNCIAS RELEVANTES:
+Liste experiências relacionadas à vaga.
+
+PONTOS POSITIVOS:
+Liste qualificações, experiências e habilidades comprovadas.
+
+PONTOS DE ATENÇÃO:
+Liste requisitos que precisam ser confirmados e lacunas relevantes.
+Não trate informações ausentes como prova de incapacidade.
+
+CNH A/B:
+Informe se está confirmada, não foi mencionada ou há outra
+informação explícita.
+
+COMPATIBILIDADE:
+Informe uma pontuação de 0 a 100, seguida de "/100".
+
+JUSTIFICATIVA:
+Explique brevemente a pontuação com base nos requisitos.
+
+PRÓXIMA ETAPA:
+Sugira o que o recrutador deve confirmar durante o contato
+ou a entrevista.
+
+Mantenha exatamente esses títulos.
 """
 
         resposta = model.invoke(prompt)
-        conteudo = extrair_texto(resposta.content)
+        analise = extrair_texto(resposta.content)
 
-        resultados.append({
-            "candidato_id": id_curriculo,
-            "analise": conteudo
-        })
-
-    if curriculo_id is not None:
-        if not resultados:
+        if not analise.strip():
             return {
-                "erro": "Não foi possível recuperar o conteúdo deste currículo."
+                "erro": "O Gemini retornou uma análise vazia."
             }
 
-        return resultados[0]
+        return {
+            "candidato_id": str(curriculo_id),
+            "remetente": remetente,
+            "analise": analise
+        }
 
-    return resultados
+    except Exception as erro:
+        logging.exception(
+            "Erro ao analisar currículo com ID %s",
+            curriculo_id
+        )
 
+        return {
+            "erro": str(erro)
+        }

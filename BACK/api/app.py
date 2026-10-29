@@ -1,246 +1,330 @@
+
 import os
 import logging
-import traceback
 
-from flask                      import Flask, request, render_template, send_file , jsonify
-from BACK.modules.bonus_module  import ( add_user, pdfTurn, get_user , pdfRead,delet_pdfs) 
-from BACK.modules.gmail_module  import ( gmail_inbox, attachment , get_curriculum , fb_send_curriculum , fb_get_curriculum)
-from BACK.llm.llm               import ( bonus_llm_process, command_process, curriculo_llm_process )
+from flask import (
+    Flask,
+    request,
+    render_template,
+    send_file,
+    jsonify
+)
+
+from BACK.modules.bonus_module import (
+    add_user,
+    pdfTurn,
+    get_user,
+    pdfRead,
+    delet_pdfs
+)
+
+from BACK.modules.gmail_module import (
+    gmail_inbox,
+    attachment,
+    get_curriculum,
+    fb_send_curriculum,
+    fb_get_curriculum
+)
+
+from BACK.llm.llm import (
+    bonus_llm_process,
+    command_process,
+    curriculo_llm_process
+)
 
 
-"procura uma pasta usando como referencia a pasta principal"
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+BASE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
 
 FRONT_DIR = os.path.join(BASE_DIR, "FRONT")
 
-"procura a pasta do front"
-app = Flask( __name__, template_folder=os.path.join(BASE_DIR, "FRONT"))
-@app.before_request
-
-def log_request():
-    print(f"Requisição: {request.method} {request.path}")
+app = Flask(
+    __name__,
+    template_folder=FRONT_DIR
+)
 
 logging.basicConfig(
-    filename="erro_motomar.log",
+    filename=os.path.join(BASE_DIR, "erro_motomar.log"),
     level=logging.ERROR,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
+
+@app.before_request
+def log_request():
+    print(f"Requisição: {request.method} {request.path}")
+
+
+@app.errorhandler(404)
+def pagina_nao_encontrada(erro):
+    # Não registra favicon ausente como erro interno.
+    if request.path == "/favicon.ico":
+        return "", 404
+
+    return jsonify({
+        "success": False,
+        "message": "Rota não encontrada."
+    }), 404
+
+
 @app.errorhandler(Exception)
-def registrar_erro(e):
-    traceback.print_exc()
+def registrar_erro(erro):
     app.logger.exception("Erro interno na aplicação")
-    return "Erro interno. Consulte erro_motomar.log", 500
+
+    return jsonify({
+        "success": False,
+        "message": str(erro)
+    }), 500
 
 
+# ============================================================
+# PÁGINAS
+# ============================================================
 
-
-"// ROTAS //"
-
-"define a rota principal"
 @app.route("/")
 def index():
+    return render_template("index.html")
 
-    return render_template("index.html",)
 
-"rota do  formulário de cadastro"
 @app.route("/cadastro")
 def cadastro():
-
     return render_template("cadastro.html")
+
 
 @app.route("/curriculo")
 def curriculo():
-
     return render_template("curriculo.html")
 
 
+# ============================================================
+# BÔNUS — CADASTRO E BUSCA
+# ============================================================
 
-"// API  BONUS//"
-
-
-
-
-
-"CADASTRO"
 @app.route("/cadastrar", methods=["POST"])
 def add():
-    
-    
-    "pegas os dados do formulário"
-    nome  = request.form.get("nome")
-    tipo  = request.form.get("tipo")
-    meta  = int(request.form.get("meta"))
+    nome = request.form.get("nome")
+    tipo = request.form.get("tipo")
+    meta = int(request.form.get("meta"))
     motos = int(request.form.get("motos"))
-    pops  = int(request.form.get("pops"))
-    vendas_card  = int(request.form.get("vendas_card"))
+    pops = int(request.form.get("pops"))
+    vendas_card = int(request.form.get("vendas_card"))
     vendas_other = int(request.form.get("vendas_other"))
 
-    "manda para a função no module"
-    add_user(nome, tipo, meta,motos, pops, vendas_card, vendas_other)
-    
-    "busca o vendedor que a gente acabou de add"
+    add_user(
+        nome,
+        tipo,
+        meta,
+        motos,
+        pops,
+        vendas_card,
+        vendas_other
+    )
+
     vendedor = get_user(nome)
-                        
-    "retorna pro template e mostra o vendedor na barra de pesquisa"
-    return render_template("index.html", vendedores = vendedor )
+
+    return render_template(
+        "index.html",
+        vendedores=vendedor
+    )
 
 
-
-
-
-"BUSCA"
 @app.route("/buscar", methods=["POST"])
-def get():
+def buscar_vendedor():
+    nome = request.form.get("nome")
+    vendedor = get_user(nome)
 
-    "recebe o nome do formulário e manda para a função no modulo"
-    nome       = request.form.get("nome")
-    vendedor  = get_user(nome)
-
-    return render_template("index.html", vendedores = vendedor)
-
-
-
+    return render_template(
+        "index.html",
+        vendedores=vendedor
+    )
 
 
-"EXPORTAR"
+# ============================================================
+# BÔNUS — EXPORTAÇÃO
+# ============================================================
 
 @app.route("/exportar-pdf", methods=["GET"])
 def exportar_pdf():
-
-    # Busca todos os vendedores
     vendedores = get_user("all")
-
-    # Gera o PDF
     pdf = pdfTurn(vendedores)
 
-    # Envia diretamente para o navegador
-    return send_file( pdf, mimetype="application/pdf", as_attachment=True, download_name="relatorio_vendedores.pdf" )
+    return send_file(
+        pdf,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="relatorio_vendedores.pdf"
+    )
 
 
+# ============================================================
+# BÔNUS — PROCESSAMENTO DE PDFs
+# ============================================================
 
-
-
-"PROCESSAR PDF"
 @app.route("/processar-pdfs", methods=["POST"])
 def processar_pdfs():
-    
-    "processa os pdf"
     pdf = pdfRead()
-    
-    "ativa a llm"
+
     bonus_llm_process(pdf)
-    
-    "deleta os pdfs"
+
     delet_pdfs()
-    
-    "mostra os cendedores adicionados"
+
     vendedores = get_user("all")
 
-    return render_template("index.html", vendedores = vendedores)
+    return render_template(
+        "index.html",
+        vendedores=vendedores
+    )
 
 
-
-
-
-"MANDAR OS PDFS PARA O ARQUIVO PDF"
 @app.route("/upload-pdf", methods=["POST"])
 def upload_pdf():
+    pdf_dir = os.path.join(BASE_DIR, "PDF")
+    os.makedirs(pdf_dir, exist_ok=True)
 
-    "acha a pasta pdf"
-    PDF_DIR = os.path.join(BASE_DIR, "PDF")
-
-    "verifica se existe , se n existir ele cria"
-    os.makedirs(PDF_DIR, exist_ok=True)
-
-    "recebe os arquivos do front"
     arquivos = request.files.getlist("arquivos")
-    
-    "para cada arquivo"
-    for arquivo in arquivos:
 
-    
-        "verifica se ta vazio"
+    for arquivo in arquivos:
         if not arquivo or not arquivo.filename:
             continue
-        "verifica se é um pdf"
+
         if not arquivo.filename.lower().endswith(".pdf"):
             continue
-        
-        "manda o arquivo para pasta PDF"
-        caminho = os.path.join(PDF_DIR, arquivo.filename)
-        arquivo.save(caminho)
 
+        caminho = os.path.join(pdf_dir, os.path.basename(arquivo.filename))
+        arquivo.save(caminho)
 
     return render_template("index.html")
 
 
+# ============================================================
+# BÔNUS — COMANDOS POR IA
+# ============================================================
 
-"LLM"
 @app.route("/llm", methods=["POST"])
 def ia():
+    context = request.form.get("comando", "").strip()
 
-    "menssagem do usuário"
-    context = request.form.get("comando","").strip()
-
-    "resposta da llms"
     resultado = command_process(context)
-
-    "mostra todos os vendedores para confirmar as auterações feitas"
     vendedores = get_user("all")
 
-    return render_template("index.html", vendedores=vendedores, resultado=resultado)
+    return render_template(
+        "index.html",
+        vendedores=vendedores,
+        resultado=resultado
+    )
 
 
+# ============================================================
+# CURRÍCULOS — IMPORTAÇÃO DO GMAIL PARA FIREBASE
+# ============================================================
 
-
-
-
-"// API  CURRICULO//"
-
-
-"envia os curriculos para o firebase"
 @app.route("/push", methods=["POST"])
 def processes_email_curriculum():
-    
-    quant_curriculo = request.args.get("quant_curriculo",default=20,type=int)
-    
-    "puxa o conteudo dos emails"
-    inbox      = gmail_inbox(quant_curriculo) 
-    "verifica se tem algum anexo e baixa ele em base 64"
-    anexo      = attachment(inbox)
-    "baixa os curriculos em base 64 e armazena suas informações"
-    curriculos = get_curriculum(anexo)
-    "manda os curriculos para o fb"
-    resultado =  fb_send_curriculum(curriculos)
+    try:
+        quant_curriculo = request.args.get(
+            "quant_curriculo",
+            default=20,
+            type=int
+        )
 
-    return jsonify({
-        "success": True,
-        "message": "Processamento dos currículos concluído",
-        "quantidade": len(curriculos),
-        "resultado": resultado
-    }), 200
+        inbox = gmail_inbox(quant_curriculo)
+        anexos = attachment(inbox)
+        curriculos = get_curriculum(anexos)
+
+        resultado = fb_send_curriculum(curriculos)
+
+        return jsonify({
+            "success": True,
+            "message": "Processamento dos currículos concluído.",
+            "quantidade": len(curriculos),
+            "resultado": resultado
+        }), 200
+
+    except Exception as erro:
+        app.logger.exception("Erro ao importar currículos")
+
+        return jsonify({
+            "success": False,
+            "message": str(erro)
+        }), 500
 
 
+# ============================================================
+# CURRÍCULOS — LISTAGEM
+# ============================================================
 
-"envia para llm analisar"
+@app.route("/buscar-curriculos", methods=["GET"])
+def list_curriculos():
+    try:
+        curriculos = fb_get_curriculum("all")
+
+        return jsonify(curriculos or []), 200
+
+    except Exception as erro:
+        app.logger.exception("Erro ao buscar currículos")
+
+        return jsonify({
+            "success": False,
+            "message": str(erro)
+        }), 500
+
+
+# ============================================================
+# CURRÍCULOS — ANÁLISE INDIVIDUAL
+# ============================================================
+
 @app.route("/analise", methods=["POST"])
 def analise_curriculo():
- 
+    try:
+        dados = request.get_json(silent=True) or {}
+        curriculo_id = dados.get("curriculo_id")
 
-    resultado = curriculo_llm_process()
-   
-        
-    return jsonify({
-        "success": True,
-        "message": "Análise concluída",
-        "resultado": resultado
-    }), 200
-    
-    
-@app.route("/buscar-curriculos", methods = ["GET"])
-def list_curriculos():
-    
-    result = fb_get_curriculum("all")
-    
-    return jsonify(result), 200
+        if not curriculo_id:
+            return jsonify({
+                "success": False,
+                "message": "O ID do currículo não foi enviado."
+            }), 400
+
+        # Passa o ID recebido para a função de IA.
+        resultado = curriculo_llm_process(
+            curriculo_id=str(curriculo_id)
+        )
+
+        if not isinstance(resultado, dict):
+            return jsonify({
+                "success": False,
+                "message": "A IA retornou um resultado inválido."
+            }), 500
+
+        if resultado.get("erro"):
+            return jsonify({
+                "success": False,
+                "message": resultado["erro"]
+            }), 422
+
+        return jsonify({
+            "success": True,
+            "message": "Análise concluída.",
+            "resultado": resultado
+        }), 200
+
+    except Exception as erro:
+        app.logger.exception("Erro na rota /analise")
+
+        return jsonify({
+            "success": False,
+            "message": str(erro)
+        }), 500
+
+
+# ============================================================
+# EXECUÇÃO LOCAL
+# ============================================================
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=2000,
+        debug=False
+    )
