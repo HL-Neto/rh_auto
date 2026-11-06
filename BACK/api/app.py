@@ -2,46 +2,16 @@
 import os
 import logging
 
-from flask import (
-    Flask,
-    request,
-    render_template,
-    send_file,
-    jsonify
-)
+from flask                     import (Flask,request,render_template,send_file,jsonify)
+from BACK.modules.bonus_module import (add_user,pdfTurn,get_user,pdfRead,delet_pdfs)
+from BACK.modules.gmail_module import (gmail_inbox,attachment,get_curriculum,fb_send_curriculum,fb_get_curriculum)
+from BACK.llm.llm              import (bonus_llm_process,command_process,curriculo_llm_process)
+from BACK.modules.desligamento_module import get_desligamentos, get_contratacoes
 
-from BACK.modules.bonus_module import (
-    add_user,
-    pdfTurn,
-    get_user,
-    pdfRead,
-    delet_pdfs
-)
-
-from BACK.modules.gmail_module import (
-    gmail_inbox,
-    attachment,
-    get_curriculum,
-    fb_send_curriculum,
-    fb_get_curriculum
-)
-
-from BACK.llm.llm import (
-    bonus_llm_process,
-    command_process,
-    curriculo_llm_process
-)
-
-
-BASE_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")
-)
-
+BASE_DIR  = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 FRONT_DIR = os.path.join(BASE_DIR, "FRONT")
 
-app = Flask(
-    __name__,
-    template_folder=FRONT_DIR
+app = Flask( __name__,template_folder=FRONT_DIR
 )
 
 logging.basicConfig(
@@ -97,29 +67,27 @@ def curriculo():
     return render_template("curriculo.html")
 
 
+
+@app.route("/desligamento")
+def desligamento():
+    return render_template("desligamento.html")
+
+
 # ============================================================
 # BÔNUS — CADASTRO E BUSCA
 # ============================================================
 
 @app.route("/cadastrar", methods=["POST"])
 def add():
-    nome = request.form.get("nome")
-    tipo = request.form.get("tipo")
-    meta = int(request.form.get("meta"))
+    nome  = request.form.get("nome")
+    tipo  = request.form.get("tipo")
+    meta  = int(request.form.get("meta"))
     motos = int(request.form.get("motos"))
-    pops = int(request.form.get("pops"))
-    vendas_card = int(request.form.get("vendas_card"))
+    pops  = int(request.form.get("pops"))
+    vendas_card  = int(request.form.get("vendas_card"))
     vendas_other = int(request.form.get("vendas_other"))
 
-    add_user(
-        nome,
-        tipo,
-        meta,
-        motos,
-        pops,
-        vendas_card,
-        vendas_other
-    )
+    add_user(nome,tipo,meta,motos,pops,vendas_card,vendas_other)
 
     vendedor = get_user(nome)
 
@@ -131,13 +99,11 @@ def add():
 
 @app.route("/buscar", methods=["POST"])
 def buscar_vendedor():
-    nome = request.form.get("nome")
+    
+    nome     = request.form.get("nome")
     vendedor = get_user(nome)
 
-    return render_template(
-        "index.html",
-        vendedores=vendedor
-    )
+    return render_template("index.html",vendedores=vendedor)
 
 
 # ============================================================
@@ -146,15 +112,11 @@ def buscar_vendedor():
 
 @app.route("/exportar-pdf", methods=["GET"])
 def exportar_pdf():
+    
     vendedores = get_user("all")
-    pdf = pdfTurn(vendedores)
+    pdf        = pdfTurn(vendedores)
 
-    return send_file(
-        pdf,
-        mimetype="application/pdf",
-        as_attachment=True,
-        download_name="relatorio_vendedores.pdf"
-    )
+    return send_file(pdf,mimetype="application/pdf",as_attachment=True,download_name="relatorio_vendedores.pdf")
 
 
 # ============================================================
@@ -163,6 +125,7 @@ def exportar_pdf():
 
 @app.route("/processar-pdfs", methods=["POST"])
 def processar_pdfs():
+   
     pdf = pdfRead()
 
     bonus_llm_process(pdf)
@@ -171,14 +134,12 @@ def processar_pdfs():
 
     vendedores = get_user("all")
 
-    return render_template(
-        "index.html",
-        vendedores=vendedores
-    )
+    return render_template("index.html",vendedores=vendedores)
 
 
 @app.route("/upload-pdf", methods=["POST"])
 def upload_pdf():
+   
     pdf_dir = os.path.join(BASE_DIR, "PDF")
     os.makedirs(pdf_dir, exist_ok=True)
 
@@ -203,16 +164,12 @@ def upload_pdf():
 
 @app.route("/llm", methods=["POST"])
 def ia():
-    context = request.form.get("comando", "").strip()
-
-    resultado = command_process(context)
+    
+    context    = request.form.get("comando", "").strip()
+    resultado  = command_process(context)
     vendedores = get_user("all")
 
-    return render_template(
-        "index.html",
-        vendedores=vendedores,
-        resultado=resultado
-    )
+    return render_template("index.html",vendedores=vendedores,resultado=resultado)
 
 
 # ============================================================
@@ -221,6 +178,7 @@ def ia():
 
 @app.route("/push", methods=["POST"])
 def processes_email_curriculum():
+    
     try:
         quant_curriculo = request.args.get(
             "quant_curriculo",
@@ -228,11 +186,10 @@ def processes_email_curriculum():
             type=int
         )
 
-        inbox = gmail_inbox(quant_curriculo)
-        anexos = attachment(inbox)
+        inbox      = gmail_inbox(quant_curriculo)
+        anexos     = attachment(inbox)
         curriculos = get_curriculum(anexos)
-
-        resultado = fb_send_curriculum(curriculos)
+        resultado  = fb_send_curriculum(curriculos)
 
         return jsonify({
             "success": True,
@@ -256,12 +213,16 @@ def processes_email_curriculum():
 
 @app.route("/buscar-curriculos", methods=["GET"])
 def list_curriculos():
+    
     try:
+        
         curriculos = fb_get_curriculum("all")
 
         return jsonify(curriculos or []), 200
 
+    
     except Exception as erro:
+        
         app.logger.exception("Erro ao buscar currículos")
 
         return jsonify({
@@ -276,20 +237,22 @@ def list_curriculos():
 
 @app.route("/analise", methods=["POST"])
 def analise_curriculo():
+    
     try:
-        dados = request.get_json(silent=True) or {}
+        
+        dados        = request.get_json(silent=True) or {}
         curriculo_id = dados.get("curriculo_id")
 
         if not curriculo_id:
+            
             return jsonify({
                 "success": False,
                 "message": "O ID do currículo não foi enviado."
             }), 400
 
+      
         # Passa o ID recebido para a função de IA.
-        resultado = curriculo_llm_process(
-            curriculo_id=str(curriculo_id)
-        )
+        resultado = curriculo_llm_process(curriculo_id=str(curriculo_id))
 
         if not isinstance(resultado, dict):
             return jsonify({
@@ -318,6 +281,49 @@ def analise_curriculo():
         }), 500
 
 
+
+
+
+@app.route("/api/desligamentos", methods=["GET"])
+def api_desligamentos():
+    try:
+        desligamentos = get_desligamentos()
+
+        return jsonify({
+            "success": True,
+            "quantidade": len(desligamentos),
+            "desligamentos": desligamentos
+        }), 200
+
+    except Exception:
+        app.logger.exception("Erro ao buscar desligamentos no Firebase")
+
+        return jsonify({
+            "success": False,
+            "message": "Erro ao buscar os desligamentos."
+        }), 500
+        
+        
+@app.route("/api/contratacoes", methods=["GET"])
+def api_contratacoes():
+    try:
+        contratacoes = get_contratacoes()
+
+        return jsonify({
+            "success": True,
+            "quantidade": len(contratacoes),
+            "contratacoes": contratacoes
+        }), 200
+
+    except Exception:
+        app.logger.exception(
+            "Erro ao buscar contratações no Firebase"
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Erro ao buscar as contratações."
+        }), 500
 # ============================================================
 # EXECUÇÃO LOCAL
 # ============================================================

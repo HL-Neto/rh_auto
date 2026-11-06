@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motomar RH | Movimentações</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root {
+    --red:#e50914;
+    --red-dark:#b20710;
+    --red-soft:#fff1f2;
+    --black:#0b0b0d;
+    --black-2:#151518;
+    --black-3:#202024;
+    --white:#fff;
+    --background:#f5f5f5;
+    --text:#171719;
+    --muted:#77777f;
+    --border:#e7e7e9;
+    --sidebar:255px;
+    --radius:16px;
+    --shadow:0 3px 14px rgba(20,20,30,.045);
+    --blue:#4389ef;
+    --green:#24a878;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:"DM Sans",sans-serif;background:var(--background);color:var(--text);min-height:100vh}
+button,input,select,textarea{font:inherit}
+.app{display:flex;min-height:100vh}
+
+.sidebar{
+    position:fixed;inset:0 auto 0 0;width:var(--sidebar);height:100vh;
+    background:var(--black);padding:28px 18px;display:flex;
+    flex-direction:column;z-index:1000;overflow-y:auto
+}
+.brand{display:flex;align-items:center;gap:12px;padding:0 10px;margin-bottom:40px}
+.brand-icon{
+    width:38px;height:38px;flex-shrink:0;border-radius:11px;
+    background:var(--red);display:flex;align-items:center;
+    justify-content:center;color:white;font-family:"Plus Jakarta Sans",sans-serif;
+    font-weight:800;font-size:18px
+}
+.brand-copy{display:flex;flex-direction:column;gap:3px}
+.brand-name{color:white;font-family:"Plus Jakarta Sans",sans-serif;font-size:18px;font-weight:800;letter-spacing:-.4px}
+.brand-subtitle{color:#929299;font-size:10px;letter-spacing:1.2px}
+.nav-label{color:#67676d;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:10px}
+.sidebar nav{display:flex;flex-direction:column;gap:5px}
+.nav-item{
+    display:flex;align-items:center;gap:12px;padding:12px 13px;
+    border-radius:10px;color:#aaaab0;text-decoration:none;
+    font-size:14px;font-weight:500;transition:.2s
+}
+.nav-item:hover,.nav-item.active{background:var(--black-3);color:white}
+.nav-item.active{box-shadow:inset 3px 0 0 var(--red)}
+.nav-item i{width:20px;height:20px;flex-shrink:0}
+.sidebar-footer{margin-top:auto;border-top:1px solid #252529;padding:18px 10px 0;color:#929299;font-size:12px;line-height:1.7}
+
+.main{margin-left:var(--sidebar);min-width:0;padding:30px;width:calc(100% - var(--sidebar))}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:28px}
+.eyebrow{color:var(--red);font-size:11px;font-weight:800;letter-spacing:1.5px;margin-bottom:8px}
+h1{font-family:"Plus Jakarta Sans",sans-serif;font-size:25px;font-weight:800;letter-spacing:-.7px;line-height:1.35;margin-bottom:5px}
+.subtitle{color:var(--muted);font-size:13px;line-height:1.7;margin-top:5px}
+.top-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:30px;background:white;border:1px solid var(--border);color:#666671;font-size:11px;white-space:nowrap}
+.status-dot{width:8px;height:8px;background:#36d67a;border-radius:50%;box-shadow:0 0 10px #36d67a55}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
+.kpi,.panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.kpi{padding:22px;min-width:0;transition:.2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(20,20,30,.07)}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:19px}
+.kpi-label{color:var(--muted);font-size:13px;line-height:1.5}
+.kpi-icon{width:40px;height:40px;flex-shrink:0;border-radius:11px;display:grid;place-items:center;background:var(--red-soft);color:var(--red)}
+.kpi-icon i{width:19px;height:19px}
+.kpi-icon.blue{background:#edf4ff;color:var(--blue)}
+.kpi-icon.green{background:#eaf8f2;color:var(--green)}
+.kpi-value{font-family:"Plus Jakarta Sans",sans-serif;font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1.3;overflow-wrap:anywhere}
+.kpi-description{color:#9999a2;font-size:11px;margin-top:6px;line-height:1.6}
+
+.content-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;margin-bottom:22px;align-items:stretch}
+.history-column{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{padding:24px;min-width:0}
+.panel-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+.panel-title{font-family:"Plus Jakarta Sans",sans-serif;font-size:15px;font-weight:800;line-height:1.5}
+.panel-description{color:var(--muted);font-size:12px;margin-top:5px;line-height:1.6}
+.chart-area{height:230px;position:relative;width:100%}
+.chart-area canvas,.comparison-chart canvas,.exit-chart-area canvas,.rating-chart-area canvas{max-width:100%}
+
+.comparison-panel{display:flex;flex-direction:column}
+.comparison-chart{height:245px;display:grid;place-items:center;flex:1;min-height:220px;position:relative}
+.comparison-legend{display:flex;flex-direction:column;gap:15px;margin-top:18px;padding-top:18px;border-top:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#666671;font-size:12px}
+.legend-item strong{color:var(--text);font-size:13px}
+.legend-label{display:flex;align-items:center;gap:9px}
+.legend-dot{width:9px;height:9px;flex-shrink:0;border-radius:50%}
+
+.exit-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:22px}
+.exit-chart-panel{min-width:0}
+.exit-chart-panel.full{grid-column:1/-1}
+.exit-chart-area{position:relative;width:100%;height:300px}
+
+.rating-section{margin-bottom:22px}
+.rating-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.rating-panel{min-width:0}
+.rating-chart-area{position:relative;height:250px;width:100%}
+.rating-average{margin-top:15px;padding-top:13px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}
+.rating-average strong{font-family:"Plus Jakarta Sans",sans-serif;font-size:19px;color:var(--red)}
+
+.chart-empty{
+    position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;text-align:center;color:var(--muted);
+    font-size:12px;line-height:1.6;padding:20px
+}
+
+/* COMENTÁRIOS POR TÓPICO */
+
+.comments-panel{margin-top:22px}
+
+.comments-header{
+    display:flex;align-items:flex-start;justify-content:space-between;
+    gap:18px;margin-bottom:22px
+}
+
+.comments-heading{display:flex;align-items:flex-start;gap:12px}
+
+.comments-icon{
+    width:42px;height:42px;border-radius:12px;
+    background:var(--red-soft);color:var(--red);
+    display:grid;place-items:center;flex-shrink:0
+}
+
+.comments-icon i{width:21px;height:21px}
+
+.comments-count{
+    background:#fff1f2;color:var(--red);
+    border:1px solid #ffd9dd;padding:7px 11px;
+    border-radius:30px;font-size:11px;font-weight:800;white-space:nowrap
+}
+
+.comments-search{
+    display:flex;align-items:center;gap:9px;width:100%;
+    max-width:480px;padding:12px 14px;background:#fafafa;
+    border:1px solid var(--border);border-radius:10px;margin-bottom:22px
+}
+
+.comments-search:focus-within{
+    border-color:var(--red);
+    box-shadow:0 0 0 3px rgba(229,9,20,.07)
+}
+
+.comments-search i{width:17px;height:17px;color:var(--muted);flex-shrink:0}
+.comments-search input{width:100%;border:0;outline:0;background:transparent;font-size:12px;color:var(--text)}
+
+/* Cada pergunta tem seu próprio painel */
+
+.comments-topics-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+    align-items:start
+}
+
+.topic-panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:13px;
+    padding:17px;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden
+}
+
+.topic-panel-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    padding-bottom:13px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:13px;
+    min-height:54px
+}
+
+.topic-title{
+    font-family:"Plus Jakarta Sans",sans-serif;
+    font-size:13px;
+    font-weight:800;
+    line-height:1.55;
+    overflow-wrap:anywhere
+}
+
+.topic-count{
+    flex-shrink:0;
+    color:var(--red);
+    background:var(--red-soft);
+    border:1px solid #ffd9dd;
+    border-radius:20px;
+    padding:5px 9px;
+    font-size:10px;
+    font-weight:800
+}
+
+/* Scrollbar independente para cada pergunta */
+
+.topic-comments-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-height:330px;
+    min-height:80px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:2px 7px 2px 2px;
+    align-content:start
+}
+
+.topic-comments-list::-webkit-scrollbar{width:6px}
+.topic-comments-list::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
+.topic-comments-list::-webkit-scrollbar-thumb{background:#c5c5c5;border-radius:10px}
+.topic-comments-list::-webkit-scrollbar-thumb:hover{background:#999}
+
+.topic-comment{
+    background:#f5f5f6;
+    border:1px solid #e9e9ec;
+    border-left:3px solid var(--red);
+    border-radius:10px;
+    padding:13px;
+    min-width:0
+}
+
+.topic-comment-top{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:10px
+}
+
+.topic-avatar{
+    width:32px;
+    height:32px;
+    flex-shrink:0;
+    display:grid;
+    place-items:center;
+    border-radius:9px;
+    background:#fff;
+    border:1px solid #e8e8eb;
+    color:var(--red);
+    font-size:11px;
+    font-weight:800
+}
+
+.topic-person{min-width:0}
+.topic-person-name{
+    color:#292930;
+    font-size:12px;
+    font-weight:800;
+    overflow-wrap:anywhere
+}
+.topic-person-meta{
+    color:#888891;
+    font-size:10px;
+    line-height:1.5;
+    margin-top:3px;
+    overflow-wrap:anywhere
+}
+
+.topic-comment-text{
+    color:#42424a;
+    font-size:12px;
+    line-height:1.8;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere
+}
+
+.topic-empty{
+    padding:22px 12px;
+    text-align:center;
+    color:#92929b;
+    font-size:11px;
+    line-height:1.7;
+    background:#fafafa;
+    border:1px dashed #dedee2;
+    border-radius:9px
+}
+
+.comments-no-results{
+    grid-column:1/-1;
+    padding:35px 20px;
+    text-align:center;
+    border:1px dashed #d9d9de;
+    background:#fafafa;
+    border-radius:12px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.8
+}
+
+.comments-footer{
+    margin-top:18px;
+    padding-top:15px;
+    border-top:1px solid var(--border);
+    color:#92929b;
+    font-size:11px;
+    line-height:1.7
+}
+
+/* TABELA */
+
+.table-panel{margin-top:20px}
+.table-tools{display:flex;align-items:center;gap:10px}
+.search-box{display:flex;align-items:center;gap:9px;padding:11px 13px;background:#fafafa;border:1px solid var(--border);border-radius:10px;min-width:230px;transition:.2s}
+.search-box:focus-within{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,9,20,.07)}
+.search-box i{color:var(--muted);width:16px;height:16px;flex-shrink:0}
+.search-box input{width:100%;min-width:0;background:transparent;border:0;outline:0;color:var(--text);font-size:12px}
+.clear-button{background:white;border:1px solid var(--border);color:#777781;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700;white-space:nowrap}
+.clear-button:hover{color:var(--red);border-color:var(--red);background:var(--red-soft)}
+
+.table-wrap{
+    overflow:auto;width:100%;max-height:460px;
+    border-radius:10px;border:1px solid var(--border)
+}
+.table-wrap::-webkit-scrollbar{width:7px;height:7px}
+.table-wrap::-webkit-scrollbar-track{background:#f1f1f1}
+.table-wrap::-webkit-scrollbar-thumb{background:#c5c5c5;border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th{
+    position:sticky;top:0;z-index:2;background:#fafafa;
+    color:#92929b;text-align:left;font-size:10px;font-weight:800;
+    letter-spacing:1px;padding:14px 12px;border-bottom:1px solid var(--border);
+    white-space:nowrap
+}
+td{padding:16px 12px;border-bottom:1px solid #eeeeF1;font-size:12px;color:#62626c;vertical-align:middle}
+tbody tr:hover{background:#fafafa}
+tbody tr:last-child td{border-bottom:0}
+.person-name{color:#24242b;font-weight:700;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;font-size:13px;overflow-wrap:anywhere}
+.person-name:hover{color:var(--red);text-decoration:underline}
+.person-hint{display:block;color:#a0a0a8;font-size:10px;margin-top:5px}
+.movement{display:inline-flex;align-items:center;padding:7px 11px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.movement.exit{color:#c72132;background:#fff0f1}
+.movement.hire{color:#276cc4;background:#edf4ff}
+.empty-state,.loading{text-align:center;color:var(--muted);padding:30px!important;font-size:12px;line-height:1.7}
+
+/* MODAL */
+
+.modal-overlay{position:fixed;inset:0;background:rgba(20,20,25,.55);backdrop-filter:blur(4px);z-index:2000;display:none;align-items:center;justify-content:center;padding:22px}
+.modal-overlay.open{display:flex}
+.modal{width:100%;max-width:1000px;max-height:92vh;overflow-y:auto;background:white;border:1px solid var(--border);border-radius:16px;box-shadow:0 25px 80px rgba(0,0,0,.2);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:flex-start;gap:15px;padding:25px 28px;background:white;border-bottom:1px solid var(--border)}
+.modal-kicker{color:var(--red);font-size:10px;font-weight:800;letter-spacing:1.7px;margin-bottom:8px}
+.modal-title{font-family:"Plus Jakarta Sans",sans-serif;font-size:21px;font-weight:800;line-height:1.4;color:var(--text);overflow-wrap:anywhere}
+.modal-subtitle{color:var(--muted);font-size:12px;line-height:1.6;margin-top:6px}
+.modal-close{width:38px;height:38px;flex-shrink:0;border:1px solid var(--border);border-radius:10px;color:#777781;background:#fafafa;cursor:pointer;display:grid;place-items:center}
+.modal-close:hover{color:var(--red);border-color:var(--red);background:var(--red-soft)}
+.modal-close i{width:18px;height:18px}
+.modal-body{padding:25px 28px 30px}
+.profile-banner{display:flex;align-items:center;gap:16px;padding:18px;border:1px solid var(--border);border-radius:12px;background:#fafafa;margin-bottom:24px}
+.avatar{width:48px;height:48px;border-radius:13px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:18px;font-weight:800;flex-shrink:0}
+.avatar.hire{background:#edf4ff;color:var(--blue)}
+.profile-main{min-width:0;flex:1}
+.profile-name{font-size:15px;font-weight:800;overflow-wrap:anywhere}
+.profile-meta{color:var(--muted);font-size:11px;line-height:1.6;margin-top:5px}
+.profile-type{padding:7px 11px;border-radius:20px;background:var(--red-soft);color:var(--red);font-size:10px;font-weight:800;white-space:nowrap}
+.profile-type.hire{background:#edf4ff;color:var(--blue)}
+.detail-section{margin-top:25px}
+.detail-section-title{display:flex;align-items:center;gap:9px;font-family:"Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:800;margin-bottom:14px}
+.detail-section-title::before{content:"";width:4px;height:17px;flex-shrink:0;border-radius:4px;background:var(--red)}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.detail-card{padding:15px;border:1px solid var(--border);background:#fafafa;border-radius:10px;min-width:0}
+.detail-label{color:#858590;font-size:11px;font-weight:700;margin-bottom:7px}
+.detail-value{color:#303039;font-size:12px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.detail-value.empty{color:#a0a0a8;font-style:italic}
+.survey-table-wrap{width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:10px}
+.survey-table{width:100%;min-width:600px;border-collapse:collapse}
+.survey-table th{background:#f5f5f5;color:#686872;padding:14px 15px;font-size:10px;letter-spacing:1px;border-bottom:1px solid var(--border)}
+.survey-table th:first-child{width:46%}
+.survey-table td{padding:14px 15px;font-size:12px;line-height:1.65;vertical-align:top;border-bottom:1px solid #eeeeF1;color:#44444d}
+.survey-table tr:last-child td{border-bottom:0}
+.survey-table tbody tr:nth-child(even){background:#fafafa}
+.survey-question{font-weight:700;color:#373740!important}
+.survey-answer{white-space:pre-wrap;overflow-wrap:anywhere}
+.survey-answer.missing{color:#aaaab2;font-style:italic}
+.modal-note{color:#888891;font-size:11px;line-height:1.7;margin-top:22px;padding-top:15px;border-top:1px solid var(--border)}
+
+@media(max-width:1400px){.main{padding:26px}.content-grid{grid-template-columns:minmax(0,1fr) 310px}.kpi{padding:19px}}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid{grid-template-columns:minmax(0,1fr) 290px}}
+@media(max-width:1000px){.content-grid{grid-template-columns:1fr}.comparison-chart{min-height:240px}}
+@media(max-width:850px){
+    :root{--sidebar:0px}
+    .app{flex-direction:column}
+    .sidebar{position:relative;inset:auto;width:100%;height:auto;padding:15px 20px;overflow:visible}
+    .brand{margin-bottom:18px;padding:0 8px}
+    .nav-label{display:none}
+    .sidebar nav{flex-direction:row;flex-wrap:nowrap;gap:5px;overflow-x:auto;padding-bottom:5px}
+    .nav-item{width:auto;padding:10px 12px;white-space:nowrap;flex-shrink:0}
+    .sidebar-footer{display:none}
+    .main{margin-left:0;width:100%;padding:22px 20px}
+    .exit-charts,.rating-charts{grid-template-columns:1fr}
+    .exit-chart-panel.full{grid-column:auto}
+}
+@media(max-width:700px){
+    .comments-topics-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+    .main{padding:17px 14px}
+    .topbar{align-items:flex-start;flex-direction:column;gap:15px;margin-bottom:24px}
+    .top-actions{justify-content:flex-start}
+    h1{font-size:22px}
+    .subtitle{font-size:12px}
+    .kpis{grid-template-columns:1fr;gap:11px}
+    .kpi{padding:18px}
+    .kpi-top{margin-bottom:12px}
+    .kpi-value{font-size:28px}
+    .panel{padding:18px}
+    .panel-header{flex-direction:column;align-items:stretch;gap:12px}
+    .table-tools{width:100%}
+    .search-box{min-width:0;flex:1}
+    .chart-area{height:215px}
+    .comparison-chart{height:240px}
+    .exit-chart-area{height:280px}
+    .rating-chart-area{height:230px}
+    .comments-header{flex-direction:column}
+    .comments-count{align-self:flex-start}
+    .comments-search{max-width:none}
+    .topic-comments-list{max-height:300px}
+    .modal-overlay{padding:8px}
+    .modal{max-height:96vh}
+    .modal-header,.modal-body{padding:19px 16px}
+    .detail-grid{grid-template-columns:1fr}
+    .profile-banner{align-items:flex-start;flex-wrap:wrap}
+    .profile-type{margin-left:64px}
+    .modal-title{font-size:18px}
+}
+@media(max-width:380px){
+    .nav-item{font-size:12px;padding:9px 8px}
+    .brand-name{font-size:16px}
+    .status-pill{font-size:10px}
+    .main{padding:12px}
+    .panel{padding:15px}
+    .table-tools{flex-wrap:wrap}
+    .search-box{flex-basis:100%}
+}
+@media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">M</div>
+        <div class="brand-copy">
+            <div class="brand-name">MOTOMAR</div>
+            <div class="brand-subtitle">GESTÃO DE PESSOAS</div>
+        </div>
+    </div>
+
+    <div class="nav-label">MENU PRINCIPAL</div>
+
+    <nav>
+        <a href="/" class="nav-item"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+        <a href="/cadastro" class="nav-item"><i data-lucide="user-plus"></i><span>Cadastro</span></a>
+        <a href="/curriculo" class="nav-item"><i data-lucide="files"></i><span>Currículos</span></a>
+        <a href="/desligamento" class="nav-item active"><i data-lucide="users"></i><span>Movimentações</span></a>
+    </nav>
+
+    <div class="sidebar-footer">MOTOMAR HONDA<br>Sistema de RH</div>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+    <div>
+        <div class="eyebrow">RECURSOS HUMANOS / INDICADORES</div>
+        <h1>Movimentações de pessoas</h1>
+        <p class="subtitle">Acompanhe contratações, desligamentos e opiniões dos colaboradores.</p>
+    </div>
+
+    <div class="top-actions">
+        <span class="status-pill"><span class="status-dot"></span> RH / MOTOMAR</span>
+    </div>
+</header>
+
+<section class="kpis">
+
+    <div class="kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Total de desligamentos</span>
+            <span class="kpi-icon"><i data-lucide="user-minus"></i></span>
+        </div>
+        <div class="kpi-value" id="kpiDesligamentos">0</div>
+        <div class="kpi-description">Registros na coleção de desligamentos</div>
+    </div>
+
+    <div class="kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Funcionários ativos</span>
+            <span class="kpi-icon blue"><i data-lucide="users"></i></span>
+        </div>
+        <div class="kpi-value" id="kpiContratacoes">0</div>
+        <div class="kpi-description">Registros atuais na coleção contratações</div>
+    </div>
+
+    <div class="kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Desligamentos no mês</span>
+            <span class="kpi-icon green"><i data-lucide="calendar-days"></i></span>
+        </div>
+        <div class="kpi-value" id="kpiMes">0</div>
+        <div class="kpi-description">Desligamentos registrados no mês atual</div>
+    </div>
+
+    <div class="kpi">
+        <div class="kpi-top">
+            <span class="kpi-label">Turnover do mês</span>
+            <span class="kpi-icon"><i data-lucide="activity"></i></span>
+        </div>
+        <div class="kpi-value" id="kpiTurnover">—</div>
+        <div class="kpi-description" id="kpiTurnoverDescricao">Taxa de rotatividade mensal</div>
+    </div>
+
+</section>
+
+<section class="content-grid">
+
+    <div class="history-column">
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Histórico de desligamentos</div>
+                    <div class="panel-description">Quantidade de desligamentos por mês</div>
+                </div>
+            </div>
+            <div class="chart-area"><canvas id="chartDesligamentos"></canvas></div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">Histórico de contratações</div>
+                    <div class="panel-description">Quantidade de admissões por mês</div>
+                </div>
+            </div>
+            <div class="chart-area"><canvas id="chartContratacoes"></canvas></div>
+        </div>
+
+    </div>
+
+    <div class="panel comparison-panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">Movimentações registradas</div>
+                <div class="panel-description">Comparação entre os dois tipos de registro</div>
+            </div>
+        </div>
+
+        <div class="comparison-chart"><canvas id="chartComparacao"></canvas></div>
+
+        <div class="comparison-legend">
+            <div class="legend-item">
+                <span class="legend-label"><span class="legend-dot" style="background:#df2636"></span>Desligamentos</span>
+                <strong id="legendDesligamentos">0</strong>
+            </div>
+            <div class="legend-item">
+                <span class="legend-label"><span class="legend-dot" style="background:#4389ef"></span>Contratações</span>
+                <strong id="legendContratacoes">0</strong>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<section class="panel" style="margin-bottom:22px">
+    <div class="panel-header">
+        <div>
+            <div class="panel-title">Evolução do turnover</div>
+            <div class="panel-description">Taxa mensal de rotatividade calculada com o quadro médio de funcionários de cada mês.</div>
+        </div>
+    </div>
+
+    <div class="chart-area"><canvas id="chartTurnover"></canvas></div>
+
+    <p class="panel-description" style="margin-top:14px">
+        O histórico do quadro de funcionários é reconstruído a partir das datas de admissão e desligamento.
+    </p>
+</section>
+
+<section class="exit-charts">
+
+    <div class="panel exit-chart-panel full">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">Saídas por cargo</div>
+                <div class="panel-description">Quantidade de desligamentos agrupados por cargo.</div>
+            </div>
+        </div>
+        <div class="exit-chart-area"><canvas id="chartSaidasCargo"></canvas></div>
+    </div>
+
+    <div class="panel exit-chart-panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">Tipos de desligamento</div>
+                <div class="panel-description">Distribuição dos tipos de desligamento registrados.</div>
+            </div>
+        </div>
+        <div class="exit-chart-area"><canvas id="chartTiposDesligamento"></canvas></div>
+    </div>
+
+    <div class="panel exit-chart-panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">Motivos de saída</div>
+                <div class="panel-description">Motivos informados pelos colaboradores desligados.</div>
+            </div>
+        </div>
+        <div class="exit-chart-area"><canvas id="chartMotivosSaida"></canvas></div>
+    </div>
+
+    <div class="panel exit-chart-panel full">
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">Relatos de assédio no ambiente de trabalho</div>
+                <div class="panel-description">
+                    Distribuição das respostas registradas na pergunta sobre vivência de situações de assédio.
+                </div>
+            </div>
+        </div>
+        <div class="exit-chart-area">
+            <canvas id="chartAssedio"></canvas>
+        </div>
+        <p class="panel-description" style="margin-top:12px">
+            O gráfico apresenta as respostas registradas na entrevista. Ele não representa uma confirmação ou investigação dos relatos.
+        </p>
+    </div>
+
+</section>
+
+<section class="rating-section">
+
+    <div class="panel" style="margin-bottom:20px">
+
+        <div class="panel-header">
+            <div>
+                <div class="panel-title">Avaliações da entrevista de desligamento</div>
+                <div class="panel-description">Distribuição das notas de 1 a 5 informadas pelos colaboradores.</div>
+            </div>
+        </div>
+
+        <div class="rating-charts">
+
+            <div class="panel rating-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Avaliação da liderança</div>
+                        <div class="panel-description">Como os colaboradores avaliaram sua liderança.</div>
+                    </div>
+                </div>
+                <div class="rating-chart-area"><canvas id="chartLideranca"></canvas></div>
+                <div class="rating-average"><span>Média das avaliações</span><strong id="mediaLideranca">—</strong></div>
+            </div>
+
+            <div class="panel rating-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Condições de trabalho</div>
+                        <div class="panel-description">Percepção sobre as condições de trabalho.</div>
+                    </div>
+                </div>
+                <div class="rating-chart-area"><canvas id="chartCondicoes"></canvas></div>
+                <div class="rating-average"><span>Média das avaliações</span><strong id="mediaCondicoes">—</strong></div>
+            </div>
+
+            <div class="panel rating-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Reconhecimento</div>
+                        <div class="panel-description">Percepção de reconhecimento profissional.</div>
+                    </div>
+                </div>
+                <div class="rating-chart-area"><canvas id="chartReconhecimento"></canvas></div>
+                <div class="rating-average"><span>Média das avaliações</span><strong id="mediaReconhecimento">—</strong></div>
+            </div>
+
+            <div class="panel rating-panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Segurança psicológica</div>
+                        <div class="panel-description">Percepção de segurança psicológica no ambiente.</div>
+                    </div>
+                </div>
+                <div class="rating-chart-area"><canvas id="chartSeguranca"></canvas></div>
+                <div class="rating-average"><span>Média das avaliações</span><strong id="mediaSeguranca">—</strong></div>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+
+<!-- COMENTÁRIOS SEPARADOS POR PERGUNTA -->
+
+<section class="panel comments-panel">
+
+    <div class="comments-header">
+
+        <div class="comments-heading">
+            <div class="comments-icon"><i data-lucide="message-square-text"></i></div>
+
+            <div>
+                <div class="panel-title">Comentários das entrevistas de desligamento</div>
+                <div class="panel-description">
+                    Cada pergunta possui seu próprio painel. Consulte as respostas de todos os colaboradores individualmente.
+                </div>
+            </div>
+        </div>
+
+        <span class="comments-count" id="commentsCount">0 comentários</span>
+
+    </div>
+
+    <div class="comments-search">
+        <i data-lucide="search"></i>
+        <input id="commentsSearch" type="text" placeholder="Buscar pergunta, comentário ou colaborador...">
+    </div>
+
+    <div class="comments-topics-grid" id="commentsTopics">
+        <div class="comments-no-results">Carregando comentários do banco de dados...</div>
+    </div>
+
+    <div class="comments-footer">
+        Cada painel apresenta as respostas registradas para uma pergunta específica. A rolagem de cada painel é independente.
+    </div>
+
+</section>
+
+<section class="panel table-panel">
+
+    <div class="panel-header">
+        <div>
+            <div class="panel-title">Histórico de colaboradores</div>
+            <div class="panel-description">Clique no nome para visualizar a ficha completa.</div>
+        </div>
+
+        <div class="table-tools">
+            <div class="search-box">
+                <i data-lucide="search"></i>
+                <input id="searchInput" type="text" placeholder="Buscar colaborador...">
+            </div>
+            <button class="clear-button" id="clearSearch">Limpar</button>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>COLABORADOR</th>
+                    <th>EMPRESA / CARGO</th>
+                    <th>MOVIMENTAÇÃO</th>
+                    <th>DATA</th>
+                </tr>
+            </thead>
+            <tbody id="employeeTable">
+                <tr><td colspan="4" class="loading">Carregando registros...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+</main>
+</div>
+
+<div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true">
+
+    <div class="modal">
+
+        <div class="modal-header">
+            <div>
+                <div class="modal-kicker" id="modalKicker">FICHA DO COLABORADOR</div>
+                <h2 class="modal-title" id="modalTitle">Detalhes do colaborador</h2>
+                <p class="modal-subtitle" id="modalSubtitle">Informações do registro</p>
+            </div>
+
+            <button class="modal-close" id="closeModal" aria-label="Fechar">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
+        <div class="modal-body" id="modalContent">
+            <div class="loading">Carregando informações...</div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   CONFIGURAÇÕES E VARIÁVEIS
+========================================================= */
+
+const API_DESLIGAMENTOS = "/api/desligamentos";
+const API_CONTRATACOES = "/api/contratacoes";
+
+let desligamentos = [];
+let contratacoes = [];
+let todosRegistros = [];
+let comentariosFiltrados = [];
+
+const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+const coresGraficos = [
+    "#dc2626","#2563eb","#16a34a","#f59e0b",
+    "#9333ea","#0891b2","#ea580c","#64748b",
+    "#db2777","#65a30d","#7c3aed","#0f766e",
+    "#be123c","#1d4ed8"
+];
+
+/* =========================================================
+   CAMPOS DA ENTREVISTA
+========================================================= */
+
+const camposDesligamento = [
+    {label:"Carimbo de data/hora",keys:["Carimbo de data/hora","carimbo_data_hora"]},
+    {label:"Nome completo",keys:["Nome Completo:","nome_completo","nome"]},
+    {label:"O que mais você valorizou durante seu tempo aqui?",keys:["O que mais você valorizou durante seu tempo aqui?"]},
+    {label:"Houve algum fator decisivo para sua saída?",keys:["Houve algum fator decisivo para sua saída? (se for pedido de demissão)"]},
+    {label:"Se fosse possível mudar algo na empresa, o que seria?",keys:["Se fosse possível mudar algo na empresa, o que seria?"]},
+    {label:"Como você descreveria a cultura da empresa?",keys:["Como você descreveria a cultura da empresa?"]},
+    {label:"Você vivenciou alguma situação de assédio?",keys:["Você vivenciou alguma situação de assédio?"]},
+    {label:"Como era a comunicação entre equipes e departamentos?",keys:["Como era a comunicação entre equipes e departamentos?"]},
+    {label:"O ambiente de trabalho era colaborativo e respeitoso?",keys:["O ambiente de trabalho era colaborativo e respeitoso?"]},
+    {label:"Suporte do gestor direto",keys:["Como você avalia o suporte e feedback recebido do seu gestor direto (Supervisor)?"]},
+    {label:"Suporte do gestor indireto",keys:["Como você avalia o suporte e feedback recebido do seu gestor indireto (Gerência)?"]},
+    {label:"Clareza de expectativas e metas",keys:["Havia clareza de expectativas e metas no seu cargo?"]},
+    {label:"Reconhecimento pelo trabalho",keys:["Você recebeu reconhecimento adequado pelo seu trabalho?"]},
+    {label:"O que você vai sentir mais falta?",keys:["O que você vai sentir mais falta?"]},
+    {label:"Oportunidades de crescimento",keys:["Sentia que havia oportunidades de crescimento e desenvolvimento?"]},
+    {label:"Voltaria a trabalhar na empresa?",keys:["Você consideraria voltar a trabalhar aqui no futuro, caso houvesse oportunidade?"]},
+    {label:"O que você não vai sentir falta?",keys:["O que você não vai sentir falta?"]},
+    {label:"Outros comentários",keys:["Há algo mais que gostaria de compartilhar e não foi mencionado?"]},
+    {label:"Avaliação geral",keys:["De 1 a 5 como você avaliaria sua experiência geral na empresa?"]},
+    {label:"Tempo de empresa",keys:["Tempo de empresa?","tempo_empresa"]},
+    {label:"Departamento",keys:["Qual seu departamento?","departamento"]},
+    {label:"Cargo",keys:["Qual se cargo?","Qual seu cargo?","Qual é seu cargo?","cargo"]},
+    {label:"Tipo de desligamento",keys:["Tipo de desligamento?","Tipo de desligamento","tipo_desligamento"]},
+    {label:"Motivo da saída",keys:["Qual o motivo da saída?","motivo_saida"]},
+    {label:"Comentário",keys:["Deixe seu comentário:"]},
+    {label:"Avaliação da liderança",keys:["Avalie De 1 a 5 sua liderança."]},
+    {label:"Condições de trabalho",keys:["Avalie de 1 a 5  Condições de trabalho.","Avalie de 1 a 5 Condições de trabalho."]},
+    {label:"Reconhecimento",keys:["Avalie de 1 a 5 Reconhecimento"]},
+    {label:"Segurança psicológica",keys:["Avalie de 1 a 5 Segurança Psicológica"]},
+    {label:"O que a Motomar deveria melhorar?",keys:["O que a motomar deveria melhorar?","O que a Motomar deveria melhorar?"]},
+    {label:"O que poderia ter evitado sua saída?",keys:["O que podera ter evitado sua saída?","O que poderia ter evitado sua saída?"]},
+    {label:"Comentário adicional",keys:["Deixe seu comentário: 2"]},
+    {label:"Endereço de e-mail",keys:["Endereço de e-mail"]},
+    {label:"Data do desligamento",keys:["Data do desligamento","data_desligamento"]},
+    {label:"E-mail",keys:["E-mail","email"]},
+    {label:"Pergunta adicional",keys:["O que mais você valorizou durante seu tempo aqui? 2"]}
+];
+
+/*
+ * Cada objeto representa um painel independente.
+ * As chaves alternativas permitem compatibilidade
+ * com variações de nomes de campos no Firebase.
+ */
+const camposComentarios = [
+    {
+        label:"O que mais você valorizou durante seu tempo aqui?",
+        keys:["O que mais você valorizou durante seu tempo aqui?"]
+    },
+    {
+        label:"Houve algum fator decisivo para sua saída?",
+        keys:["Houve algum fator decisivo para sua saída? (se for pedido de demissão)"]
+    },
+    {
+        label:"Se fosse possível mudar algo na empresa, o que seria?",
+        keys:["Se fosse possível mudar algo na empresa, o que seria?"]
+    },
+    {
+        label:"Como você descreveria a cultura da empresa?",
+        keys:["Como você descreveria a cultura da empresa?"]
+    },
+    {
+        label:"Você vivenciou alguma situação de assédio?",
+        keys:["Você vivenciou alguma situação de assédio?"]
+    },
+    {
+        label:"Como era a comunicação entre equipes e departamentos?",
+        keys:["Como era a comunicação entre equipes e departamentos?"]
+    },
+    {
+        label:"O que você vai sentir mais falta?",
+        keys:["O que você vai sentir mais falta?"]
+    },
+    {
+        label:"O que você não vai sentir falta?",
+        keys:["O que você não vai sentir falta?"]
+    },
+    {
+        label:"Outros comentários",
+        keys:["Há algo mais que gostaria de compartilhar e não foi mencionado?"]
+    },
+    {
+        label:"Comentário",
+        keys:["Deixe seu comentário:"]
+    },
+    {
+        label:"O que a Motomar deveria melhorar?",
+        keys:["O que a motomar deveria melhorar?","O que a Motomar deveria melhorar?"]
+    },
+    {
+        label:"O que poderia ter evitado sua saída?",
+        keys:["O que podera ter evitado sua saída?","O que poderia ter evitado sua saída?"]
+    },
+    {
+        label:"Comentário adicional",
+        keys:["Deixe seu comentário: 2"]
+    },
+    {
+        label:"Pergunta adicional",
+        keys:["O que mais você valorizou durante seu tempo aqui? 2"]
+    }
+];
+
+const camposAvaliacoes = [
+    {
+        id:"chartLideranca",
+        media:"mediaLideranca",
+        titulo:"Avaliação da liderança",
+        keys:["Avalie De 1 a 5 sua liderança.","Avalie de 1 a 5 sua liderança.","Avaliação da liderança"]
+    },
+    {
+        id:"chartCondicoes",
+        media:"mediaCondicoes",
+        titulo:"Condições de trabalho",
+        keys:["Avalie de 1 a 5  Condições de trabalho.","Avalie de 1 a 5 Condições de trabalho.","Avaliação das condições de trabalho"]
+    },
+    {
+        id:"chartReconhecimento",
+        media:"mediaReconhecimento",
+        titulo:"Reconhecimento",
+        keys:["Avalie de 1 a 5 Reconhecimento","Avalie de 1 a 5 reconhecimento","Avaliação de reconhecimento"]
+    },
+    {
+        id:"chartSeguranca",
+        media:"mediaSeguranca",
+        titulo:"Segurança psicológica",
+        keys:["Avalie de 1 a 5 Segurança Psicológica","Avalie de 1 a 5 segurança psicológica","Avaliação de segurança psicológica"]
+    }
+];
+
+/* =========================================================
+   FUNÇÕES GERAIS
+========================================================= */
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+    }[char]));
+}
+
+function normalizarTexto(value) {
+    return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g," ");
+}
+
+function obterValor(item,keys,fallback="") {
+    if (!item) return fallback;
+
+    for (const key of keys) {
+        if (item[key] !== undefined && item[key] !== null && item[key] !== "") {
+            return item[key];
+        }
+    }
+
+    const mapa = {};
+
+    Object.keys(item).forEach(key => {
+        mapa[normalizarTexto(key)] = key;
+    });
+
+    for (const key of keys) {
+        const encontrada = mapa[normalizarTexto(key)];
+
+        if (encontrada) {
+            const valor = item[encontrada];
+
+            if (valor !== undefined && valor !== null && valor !== "") {
+                return valor;
+            }
+        }
+    }
+
+    return fallback;
+}
+
+function obterNome(item) {
+    return obterValor(
+        item,
+        ["funcionario","nome","colaborador","nome_completo","Nome Completo:","name"],
+        "Não informado"
+    );
+}
+
+function obterDepartamento(item) {
+    return obterValor(
+        item,
+        ["departamento","setor","area","empresa","Qual seu departamento?"],
+        "Não informado"
+    );
+}
+
+function obterCargo(item) {
+    return obterValor(
+        item,
+        ["cargo","funcao","função","Qual se cargo?","Qual seu cargo?","Qual é seu cargo?"],
+        "Não informado"
+    );
+}
+
+function obterDataDesligamento(item) {
+    return obterValor(
+        item,
+        ["carimbo_data_hora","Carimbo de data/hora","data_desligamento","Data do desligamento","data","data_saida"],
+        null
+    );
+}
+
+function obterDataContratacao(item) {
+    return obterValor(
+        item,
+        ["admissao","data_admissao","data_contratacao","contratacao_data","data","Data de contratação"],
+        null
+    );
+}
+
+function obterTimestamp(value) {
+    if (!value) return null;
+
+    if (typeof value === "object") {
+        if (typeof value.toDate === "function") {
+            const data = value.toDate();
+            return isNaN(data.getTime()) ? null : data;
+        }
+
+        const segundos = value.seconds ?? value._seconds;
+
+        if (segundos !== undefined && segundos !== null) {
+            return new Date(Number(segundos) * 1000);
+        }
+    }
+
+    if (typeof value === "number") {
+        const date = new Date(value < 100000000000 ? value * 1000 : value);
+        return isNaN(date.getTime()) ? null : date;
+    }
+
+    if (typeof value === "string") {
+        const texto = value.trim();
+        const brasileira = texto.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+
+        if (brasileira) {
+            return new Date(Date.UTC(
+                Number(brasileira[3]),
+                Number(brasileira[2]) - 1,
+                Number(brasileira[1])
+            ));
+        }
+
+        const data = new Date(texto);
+        return isNaN(data.getTime()) ? null : data;
+    }
+
+    return null;
+}
+
+function formatarData(value) {
+    const date = obterTimestamp(value);
+    if (!date) return "Não informado";
+    return date.toLocaleDateString("pt-BR", {timeZone:"UTC"});
+}
+
+function formatarValor(value) {
+    if (value === null || value === undefined || value === "") {
+        return "Não informado";
+    }
+
+    if (typeof value === "object") {
+        if (
+            value.seconds !== undefined ||
+            value._seconds !== undefined ||
+            typeof value.toDate === "function"
+        ) {
+            return formatarData(value);
+        }
+
+        return JSON.stringify(value);
+    }
+
+    return String(value);
+}
+
+function iniciais(nome) {
+    return String(nome)
+        .split(" ")
+        .filter(Boolean)
+        .slice(0,2)
+        .map(p => p[0])
+        .join("")
+        .toUpperCase();
+}
+
+function inicioDoMes(ano,mes) {
+    return new Date(Date.UTC(ano,mes,1));
+}
+
+function fimDoMes(ano,mes) {
+    return new Date(Date.UTC(ano,mes+1,0,23,59,59,999));
+}
+
+/* =========================================================
+   CÁLCULO DO QUADRO E TURNOVER
+========================================================= */
+
+function calcularQuadroNaData(data) {
+
+    const contratacoesPosteriores = contratacoes.filter(item => {
+        const d = obterTimestamp(obterDataContratacao(item));
+        return d && d.getTime() > data.getTime();
+    }).length;
+
+    const desligamentosPosteriores = desligamentos.filter(item => {
+        const d = obterTimestamp(obterDataDesligamento(item));
+        return d && d.getTime() > data.getTime();
+    }).length;
+
+    return Math.max(
+        0,
+        contratacoes.length - contratacoesPosteriores + desligamentosPosteriores
+    );
+}
+
+function calcularTurnoverMensal(ano,mes) {
+
+    const inicio = inicioDoMes(ano,mes);
+    const fim = fimDoMes(ano,mes);
+
+    const admissoes = contratacoes.filter(item => {
+        const d = obterTimestamp(obterDataContratacao(item));
+        return d && d.getUTCMonth() === mes && d.getUTCFullYear() === ano;
+    }).length;
+
+    const saidas = desligamentos.filter(item => {
+        const d = obterTimestamp(obterDataDesligamento(item));
+        return d && d.getUTCMonth() === mes && d.getUTCFullYear() === ano;
+    }).length;
+
+    const quadroInicial = calcularQuadroNaData(new Date(inicio.getTime() - 1));
+    const quadroFinal = calcularQuadroNaData(fim);
+    const quadroMedio = (quadroInicial + quadroFinal) / 2;
+
+    if (quadroMedio <= 0) {
+        return {
+            ano,mes,admissoes,saidas,
+            quadroInicial,quadroFinal,quadroMedio,
+            turnover:null
+        };
+    }
+
+    return {
+        ano,mes,admissoes,saidas,
+        quadroInicial,quadroFinal,quadroMedio,
+        turnover:((admissoes + saidas) / 2) / quadroMedio * 100
+    };
+}
+
+function obterHistoricoTurnover() {
+
+    const hoje = new Date();
+    const historico = [];
+
+    for (let i = 11; i >= 0; i--) {
+        const data = new Date(Date.UTC(
+            hoje.getFullYear(),
+            hoje.getMonth() - i,
+            1
+        ));
+
+        historico.push(
+            calcularTurnoverMensal(
+                data.getUTCFullYear(),
+                data.getUTCMonth()
+            )
+        );
+    }
+
+    return historico;
+}
+
+function renderTurnoverChart(historico) {
+
+    const canvas = document.getElementById("chartTurnover");
+    if (!canvas) return;
+
+    const existente = Chart.getChart(canvas);
+    if (existente) existente.destroy();
+
+    new Chart(canvas, {
+        type:"line",
+        data:{
+            labels:historico.map(item =>
+                `${meses[item.mes]}/${String(item.ano).slice(-2)}`
+            ),
+            datasets:[{
+                label:"Turnover",
+                data:historico.map(item => item.turnover),
+                borderColor:"#e50914",
+                backgroundColor:"rgba(229,9,20,.10)",
+                borderWidth:3,
+                fill:true,
+                tension:.35,
+                spanGaps:false,
+                pointRadius:5,
+                pointHoverRadius:7,
+                pointBackgroundColor:"#e50914"
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label:context =>
+                            context.raw === null
+                                ? "Sem dados suficientes"
+                                : `Turnover: ${context.raw.toFixed(2)}%`
+                    }
+                }
+            },
+            scales:{
+                x:{grid:{display:false},ticks:{color:"#858590"}},
+                y:{
+                    beginAtZero:true,
+                    ticks:{
+                        color:"#858590",
+                        callback:value => `${value}%`
+                    },
+                    grid:{color:"#eeeeF1"}
+                }
+            }
+        }
+    });
+}
+
+/* =========================================================
+   CONSULTA À API FLASK
+========================================================= */
+
+async function buscarEndpoint(url,chave) {
+
+    const response = await fetch(url, {
+        method:"GET",
+        headers:{"Accept":"application/json"},
+        cache:"no-store"
+    });
+
+    if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status} ao consultar ${url}`);
+    }
+
+    const json = await response.json();
+
+    if (Array.isArray(json)) return json;
+    if (Array.isArray(json[chave])) return json[chave];
+    if (Array.isArray(json.data)) return json.data;
+    if (Array.isArray(json.registros)) return json.registros;
+
+    console.warn(`Formato inesperado na API ${url}:`,json);
+    return [];
+}
+
+/* =========================================================
+   COMENTÁRIOS ORGANIZADOS POR TÓPICO
+========================================================= */
+
+function respostaValida(resposta) {
+
+    if (resposta === null || resposta === undefined) return false;
+
+    const texto = String(resposta).trim();
+
+    if (!texto) return false;
+
+    const normalizado = normalizarTexto(texto);
+
+    return ![
+        "nao informado",
+        "n/a",
+        "null",
+        "undefined"
+    ].includes(normalizado);
+}
+
+function prepararComentarios() {
+
+    comentariosFiltrados = [];
+
+    desligamentos.forEach(item => {
+
+        camposComentarios.forEach((campo,index) => {
+
+            const resposta = obterValor(item,campo.keys,"");
+
+            if (!respostaValida(resposta)) return;
+
+            comentariosFiltrados.push({
+                id:`${item.id ?? obterNome(item)}-${index}`,
+                nome:obterNome(item),
+                pergunta:campo.label,
+                comentario:String(resposta).trim(),
+                departamento:obterDepartamento(item),
+                data:obterDataDesligamento(item)
+            });
+
+        });
+
+    });
+
+    renderComentarios(comentariosFiltrados);
+}
+
+/*
+ * Cada pergunta é renderizada como um painel separado.
+ * A lista de comentários de cada painel possui sua
+ * própria altura máxima e sua própria scrollbar.
+ */
+
+function renderComentarios(registros) {
+
+    const container = document.getElementById("commentsTopics");
+    const contador = document.getElementById("commentsCount");
+
+    const busca = normalizarTexto(
+        document.getElementById("commentsSearch").value
+    );
+
+    const totalComentarios = registros.length;
+
+    contador.textContent =
+        `${totalComentarios} ${totalComentarios === 1 ? "comentário" : "comentários"}`;
+
+    const grupos = camposComentarios.map(campo => {
+
+        const respostas = registros.filter(item => {
+
+            if (item.pergunta !== campo.label) return false;
+
+            if (!busca) return true;
+
+            return (
+                normalizarTexto(item.nome).includes(busca) ||
+                normalizarTexto(item.comentario).includes(busca) ||
+                normalizarTexto(item.departamento).includes(busca) ||
+                normalizarTexto(item.pergunta).includes(busca)
+            );
+
+        });
+
+        return {
+            label:campo.label,
+            respostas
+        };
+
+    });
+
+    const gruposVisiveis = grupos.filter(grupo => grupo.respostas.length > 0);
+
+    if (!gruposVisiveis.length) {
+
+        container.innerHTML = `
+            <div class="comments-no-results">
+                <strong>Nenhum comentário encontrado.</strong><br>
+                Não há respostas correspondentes à busca ou os campos ainda não possuem respostas registradas.
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = gruposVisiveis.map(grupo => `
+
+        <section class="topic-panel">
+
+            <div class="topic-panel-header">
+
+                <h3 class="topic-title">
+                    ${escapeHtml(grupo.label)}
+                </h3>
+
+                <span class="topic-count">
+                    ${grupo.respostas.length}
+                    ${grupo.respostas.length === 1 ? "resposta" : "respostas"}
+                </span>
+
+            </div>
+
+            <div class="topic-comments-list">
+
+                ${grupo.respostas.map(item => `
+
+                    <article class="topic-comment">
+
+                        <div class="topic-comment-top">
+
+                            <div class="topic-avatar">
+                                ${escapeHtml(iniciais(
+                                    item.nome === "Não informado" ? "RH" : item.nome
+                                ))}
+                            </div>
+
+                            <div class="topic-person">
+
+                                <div class="topic-person-name">
+                                    ${escapeHtml(item.nome)}
+                                </div>
+
+                                <div class="topic-person-meta">
+                                    ${escapeHtml(item.departamento)}
+                                    ${item.data ? " · " + escapeHtml(formatarData(item.data)) : ""}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <p class="topic-comment-text">
+                            ${escapeHtml(item.comentario)}
+                        </p>
+
+                    </article>
+
+                `).join("")}
+
+            </div>
+
+        </section>
+
+    `).join("");
+}
+
+document.getElementById("commentsSearch").addEventListener("input",() => {
+    renderComentarios(comentariosFiltrados);
+});
+
+/* =========================================================
+   CARREGAMENTO DOS DADOS
+========================================================= */
+
+async function buscarDados() {
+
+    const tbody = document.getElementById("employeeTable");
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="4" class="loading">Consultando registros...</td>
+        </tr>
+    `;
+
+    try {
+
+        desligamentos = await buscarEndpoint(
+            API_DESLIGAMENTOS,
+            "desligamentos"
+        );
+
+        prepararComentarios();
+
+        try {
+
+            contratacoes = await buscarEndpoint(
+                API_CONTRATACOES,
+                "contratacoes"
+            );
+
+        } catch(error) {
+
+            console.warn("Não foi possível carregar contratações:",error);
+            contratacoes = [];
+
+        }
+
+        console.log("Desligamentos:",desligamentos);
+        console.log("Contratações:",contratacoes);
+
+        atualizarDashboard();
+
+    } catch(error) {
+
+        console.error("Erro ao carregar desligamentos:",error);
+
+        document.getElementById("commentsTopics").innerHTML = `
+            <div class="comments-no-results">
+                Não foi possível carregar os comentários.
+                Verifique a rota Flask <strong>/api/desligamentos</strong>
+                e o console do navegador.
+            </div>
+        `;
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty-state">
+                    Erro ao consultar os desligamentos.
+                    Verifique a rota Flask e o console do navegador.
+                </td>
+            </tr>
+        `;
+
+    }
+}
+
+/* =========================================================
+   ATUALIZAÇÃO DO DASHBOARD
+========================================================= */
+
+function atualizarDashboard() {
+
+    document.getElementById("kpiDesligamentos").textContent =
+        desligamentos.length;
+
+    document.getElementById("kpiContratacoes").textContent =
+        contratacoes.length;
+
+    const historico = obterHistoricoTurnover();
+    const atual = historico[historico.length - 1];
+
+    document.getElementById("kpiMes").textContent = atual.saidas;
+
+    if (atual.turnover !== null) {
+
+        document.getElementById("kpiTurnover").textContent =
+            `${atual.turnover.toFixed(2)}%`;
+
+        document.getElementById("kpiTurnoverDescricao").textContent =
+            `Quadro médio: ${atual.quadroMedio.toFixed(1)} funcionários`;
+
+    } else {
+
+        document.getElementById("kpiTurnover").textContent = "—";
+
+        document.getElementById("kpiTurnoverDescricao").textContent =
+            "Não há quadro médio suficiente para calcular";
+
+    }
+
+    document.getElementById("legendDesligamentos").textContent =
+        desligamentos.length;
+
+    document.getElementById("legendContratacoes").textContent =
+        contratacoes.length;
+
+    todosRegistros = [
+
+        ...desligamentos.map(item => ({
+            ...item,
+            tipoMovimentacao:"Desligamento",
+            dataMovimentacao:obterDataDesligamento(item)
+        })),
+
+        ...contratacoes.map(item => ({
+            ...item,
+            tipoMovimentacao:"Contratação",
+            dataMovimentacao:obterDataContratacao(item)
+        }))
+
+    ];
+
+    todosRegistros.sort((a,b) => {
+
+        const da = obterTimestamp(a.dataMovimentacao);
+        const db = obterTimestamp(b.dataMovimentacao);
+
+        return (db?.getTime() || 0) - (da?.getTime() || 0);
+
+    });
+
+    renderEmployees(todosRegistros);
+    renderCharts();
+    renderTurnoverChart(historico);
+    renderRatingCharts();
+}
+
+/* =========================================================
+   TABELA DE COLABORADORES
+========================================================= */
+
+function renderEmployees(registros) {
+
+    const tbody = document.getElementById("employeeTable");
+
+    if (!registros.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty-state">
+                    Nenhum registro encontrado.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    tbody.innerHTML = registros.map((item,index) => `
+
+        <tr>
+
+            <td>
+                <button class="person-name" data-index="${index}">
+                    ${escapeHtml(obterNome(item))}
+                </button>
+
+                <span class="person-hint">Ver ficha profissional</span>
+            </td>
+
+            <td>
+                ${escapeHtml(obterDepartamento(item))}
+                <span class="person-hint">${escapeHtml(obterCargo(item))}</span>
+            </td>
+
+            <td>
+                <span class="movement ${item.tipoMovimentacao === "Desligamento" ? "exit" : "hire"}">
+                    ${item.tipoMovimentacao}
+                </span>
+            </td>
+
+            <td>${escapeHtml(formatarData(item.dataMovimentacao))}</td>
+
+        </tr>
+
+    `).join("");
+
+    tbody.querySelectorAll(".person-name").forEach(button => {
+
+        button.addEventListener("click",() => {
+            abrirFicha(registros[Number(button.dataset.index)]);
+        });
+
+    });
+}
+
+/* =========================================================
+   AGRUPAMENTO DE RESPOSTAS
+========================================================= */
+
+function agruparRespostas(registros,chaves) {
+
+    const contagem = new Map();
+
+    registros.forEach(item => {
+
+        const resposta = obterValor(item,chaves,"");
+
+        if (resposta === null || resposta === undefined || resposta === "") {
+            return;
+        }
+
+        const respostas = Array.isArray(resposta) ? resposta : [resposta];
+
+        respostas.forEach(valor => {
+
+            if (valor === null || valor === undefined) return;
+
+            const original = String(valor)
+                .trim()
+                .replace(/\s+/g," ")
+                .replace(/[.!;]+$/g,"");
+
+            if (!original) return;
+
+            const chave = normalizarTexto(original);
+
+            if (!contagem.has(chave)) {
+                contagem.set(chave,{
+                    label:original,
+                    total:0
+                });
+            }
+
+            contagem.get(chave).total++;
+
+        });
+
+    });
+
+    return Array.from(contagem.values())
+        .sort((a,b) => b.total - a.total);
+}
+
+/* =========================================================
+   GRÁFICOS DE PIZZA
+========================================================= */
+
+function criarGraficoPizza(canvasId,dados,titulo) {
+
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const existente = Chart.getChart(canvas);
+    if (existente) existente.destroy();
+
+    const labels = dados.map(item => item.label);
+    const valores = dados.map(item => Number(item.total) || 0);
+    const total = valores.reduce((s,v) => s + v,0);
+
+    const area = canvas.parentElement;
+    const mensagemAnterior = area.querySelector(".chart-empty");
+
+    if (mensagemAnterior) mensagemAnterior.remove();
+
+    if (total === 0) {
+
+        canvas.style.display = "none";
+
+        const mensagem = document.createElement("div");
+        mensagem.className = "chart-empty";
+        mensagem.textContent = "Nenhum registro disponível para este indicador.";
+
+        area.appendChild(mensagem);
+        return;
+    }
+
+    canvas.style.display = "block";
+
+    new Chart(canvas, {
+
+        type:"pie",
+
+        data:{
+            labels,
+            datasets:[{
+                label:titulo,
+                data:valores,
+                backgroundColor:valores.map(
+                    (_,i) => coresGraficos[i % coresGraficos.length]
+                ),
+                borderColor:"#fff",
+                borderWidth:2,
+                hoverOffset:8
+            }]
+        },
+
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            layout:{padding:8},
+            plugins:{
+                legend:{
+                    position:"bottom",
+                    labels:{
+                        padding:15,
+                        usePointStyle:true,
+                        boxWidth:9,
+                        font:{size:11}
+                    }
+                },
+                tooltip:{
+                    callbacks:{
+                        label:context => {
+                            const valor = Number(context.raw) || 0;
+                            return ` ${context.label}: ${valor} (${(valor / total * 100).toFixed(1)}%)`;
+                        }
+                    }
+                }
+            }
+        },
+
+        plugins:[{
+            id:"porcentagens",
+
+            afterDatasetsDraw(chart) {
+
+                const {ctx} = chart;
+                const meta = chart.getDatasetMeta(0);
+                const dataset = chart.data.datasets[0];
+
+                meta.data.forEach((element,index) => {
+
+                    const valor = Number(dataset.data[index]) || 0;
+                    const p = total ? valor / total * 100 : 0;
+
+                    if (p < 3) return;
+
+                    const pos = element.tooltipPosition();
+
+                    ctx.save();
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.shadowColor = "rgba(0,0,0,.25)";
+                    ctx.shadowBlur = 3;
+                    ctx.fillText(`${p.toFixed(1)}%`,pos.x,pos.y);
+                    ctx.restore();
+
+                });
+
+            }
+
+        }]
+
+    });
+
+}
+
+/* =========================================================
+   GRÁFICO DE ASSÉDIO
+========================================================= */
+
+function renderGraficoAssedio() {
+
+    const dados = agruparRespostas(
+        desligamentos,
+        ["Você vivenciou alguma situação de assédio?"]
+    ).filter(item =>
+        !["","nao informado","n/a"].includes(normalizarTexto(item.label))
+    );
+
+    criarGraficoPizza(
+        "chartAssedio",
+        dados,
+        "Respostas sobre situações de assédio"
+    );
+
+}
+
+/* =========================================================
+   GRÁFICOS DE DESLIGAMENTO
+========================================================= */
+
+function renderExitCharts() {
+
+    const dadosCargo = agruparRespostas(
+        desligamentos,
+        [
+            "Qual se cargo?",
+            "Qual seu cargo?",
+            "Qual é seu cargo?",
+            "cargo",
+            "funcao",
+            "função"
+        ]
+    ).filter(item =>
+        !["","nao informado"].includes(normalizarTexto(item.label))
+    );
+
+    const dadosTipo = agruparRespostas(
+        desligamentos,
+        [
+            "Tipo de desligamento?",
+            "Tipo de desligamento",
+            "tipo_desligamento",
+            "tipo de desligamento"
+        ]
+    );
+
+    const dadosMotivo = agruparRespostas(
+        desligamentos,
+        [
+            "Qual o motivo da saída?",
+            "motivo_saida",
+            "motivo da saída"
+        ]
+    );
+
+    criarGraficoPizza("chartSaidasCargo",dadosCargo,"Saídas por cargo");
+    criarGraficoPizza("chartTiposDesligamento",dadosTipo,"Tipos de desligamento");
+    criarGraficoPizza("chartMotivosSaida",dadosMotivo,"Motivos de saída");
+
+}
+
+/* =========================================================
+   GRÁFICOS DE HISTÓRICO
+========================================================= */
+
+function renderCharts() {
+
+    const labels = [];
+    const saidas = [];
+    const entradas = [];
+    const hoje = new Date();
+
+    for (let i = 11; i >= 0; i--) {
+
+        const date = new Date(Date.UTC(
+            hoje.getFullYear(),
+            hoje.getMonth() - i,
+            1
+        ));
+
+        labels.push(
+            `${meses[date.getUTCMonth()]}/${String(date.getUTCFullYear()).slice(-2)}`
+        );
+
+        saidas.push(
+            desligamentos.filter(item => {
+
+                const d = obterTimestamp(obterDataDesligamento(item));
+
+                return d &&
+                    d.getUTCMonth() === date.getUTCMonth() &&
+                    d.getUTCFullYear() === date.getUTCFullYear();
+
+            }).length
+        );
+
+        entradas.push(
+            contratacoes.filter(item => {
+
+                const d = obterTimestamp(obterDataContratacao(item));
+
+                return d &&
+                    d.getUTCMonth() === date.getUTCMonth() &&
+                    d.getUTCFullYear() === date.getUTCFullYear();
+
+            }).length
+        );
+
+    }
+
+    const options = {
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+            x:{
+                grid:{display:false},
+                ticks:{color:"#858590",font:{size:10}}
+            },
+            y:{
+                beginAtZero:true,
+                ticks:{
+                    color:"#858590",
+                    precision:0,
+                    stepSize:1
+                },
+                grid:{color:"#eeeeF1"}
+            }
+        }
+    };
+
+    const configuracoes = [
+        ["chartDesligamentos",saidas,"rgba(223,38,54,.75)","#df2636"],
+        ["chartContratacoes",entradas,"rgba(67,137,239,.75)","#4389ef"]
+    ];
+
+    configuracoes.forEach(([id,dados,fundo,borda]) => {
+
+        const canvas = document.getElementById(id);
+        const existente = Chart.getChart(canvas);
+
+        if (existente) existente.destroy();
+
+        new Chart(canvas, {
+            type:"bar",
+            data:{
+                labels,
+                datasets:[{
+                    data:dados,
+                    backgroundColor:fundo,
+                    borderColor:borda,
+                    borderWidth:1,
+                    borderRadius:5,
+                    maxBarThickness:25
+                }]
+            },
+            options
+        });
+
+    });
+
+    const comparacao = document.getElementById("chartComparacao");
+    const existente = Chart.getChart(comparacao);
+
+    if (existente) existente.destroy();
+
+    new Chart(comparacao, {
+        type:"doughnut",
+        data:{
+            labels:["Desligamentos","Contratações"],
+            datasets:[{
+                data:[desligamentos.length,contratacoes.length],
+                backgroundColor:["#df2636","#4389ef"],
+                borderColor:"#fff",
+                borderWidth:5,
+                hoverOffset:7
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            cutout:"72%",
+            plugins:{legend:{display:false}}
+        }
+    });
+
+    renderExitCharts();
+    renderGraficoAssedio();
+
+}
+
+/* =========================================================
+   GRÁFICOS DAS AVALIAÇÕES DE 1 A 5
+========================================================= */
+
+function extrairNota(valor) {
+
+    if (valor === null || valor === undefined || valor === "") {
+        return null;
+    }
+
+    if (typeof valor === "number") {
+        return Number.isInteger(valor) && valor >= 1 && valor <= 5
+            ? valor
+            : null;
+    }
+
+    const texto = String(valor).trim();
+    const match = texto.match(/(?:^|\D)([1-5])(?:\s|$|[-–—().])/);
+
+    if (!match) return null;
+
+    const nota = Number(match[1]);
+    return nota >= 1 && nota <= 5 ? nota : null;
+}
+
+function calcularDistribuicaoNotas(registros,chaves) {
+
+    const distribuicao = {1:0,2:0,3:0,4:0,5:0};
+
+    let soma = 0;
+    let total = 0;
+
+    registros.forEach(item => {
+
+        const valor = obterValor(item,chaves,null);
+        const nota = extrairNota(valor);
+
+        if (nota === null) return;
+
+        distribuicao[nota]++;
+        soma += nota;
+        total++;
+
+    });
+
+    return {
+        distribuicao,
+        soma,
+        total,
+        media:total ? soma / total : null
+    };
+}
+
+function criarGraficoAvaliacao(config) {
+
+    const canvas = document.getElementById(config.id);
+    const mediaElemento = document.getElementById(config.media);
+
+    if (!canvas || !mediaElemento) return;
+
+    const resultado = calcularDistribuicaoNotas(
+        desligamentos,
+        config.keys
+    );
+
+    const existente = Chart.getChart(canvas);
+    if (existente) existente.destroy();
+
+    mediaElemento.textContent =
+        resultado.media !== null
+            ? resultado.media.toFixed(2).replace(".",",")
+            : "—";
+
+    const area = canvas.parentElement;
+    const mensagemAnterior = area.querySelector(".chart-empty");
+
+    if (mensagemAnterior) mensagemAnterior.remove();
+
+    if (resultado.total === 0) {
+
+        canvas.style.display = "none";
+
+        const mensagem = document.createElement("div");
+        mensagem.className = "chart-empty";
+        mensagem.textContent = "Nenhuma avaliação válida encontrada no banco de dados.";
+
+        area.appendChild(mensagem);
+        return;
+    }
+
+    canvas.style.display = "block";
+
+    new Chart(canvas, {
+        type:"bar",
+        data:{
+            labels:["1","2","3","4","5"],
+            datasets:[{
+                label:"Quantidade de respostas",
+                data:[1,2,3,4,5].map(nota => resultado.distribuicao[nota]),
+                backgroundColor:["#dc2626","#f97316","#f59e0b","#84cc16","#16a34a"],
+                borderRadius:7,
+                borderSkipped:false,
+                maxBarThickness:48
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label:context =>
+                            `${context.raw} ${context.raw === 1 ? "resposta" : "respostas"}`
+                    },
+                    backgroundColor:"#151518",
+                    padding:12
+                }
+            },
+            scales:{
+                x:{
+                    title:{
+                        display:true,
+                        text:"Nota atribuída",
+                        color:"#77777f",
+                        font:{size:11}
+                    },
+                    grid:{display:false},
+                    ticks:{color:"#55555f",font:{weight:"bold"}}
+                },
+                y:{
+                    beginAtZero:true,
+                    ticks:{
+                        precision:0,
+                        stepSize:1,
+                        color:"#858590"
+                    },
+                    grid:{color:"#eeeeF1"},
+                    title:{
+                        display:true,
+                        text:"Quantidade de respostas",
+                        color:"#77777f",
+                        font:{size:11}
+                    }
+                }
+            }
+        }
+    });
+
+}
+
+function renderRatingCharts() {
+    camposAvaliacoes.forEach(criarGraficoAvaliacao);
+}
+
+/* =========================================================
+   FICHA DO COLABORADOR
+========================================================= */
+
+function criarCard(label,value) {
+
+    const text = formatarValor(value);
+    const empty = text === "Não informado";
+
+    return `
+        <div class="detail-card">
+            <div class="detail-label">${escapeHtml(label)}</div>
+            <div class="detail-value ${empty ? "empty" : ""}">
+                ${escapeHtml(text)}
+            </div>
+        </div>
+    `;
+}
+
+function criarTabelaDesligamento(item) {
+
+    const rows = camposDesligamento.map(field => {
+
+        const value = obterValor(item,field.keys,"");
+        const text = formatarValor(value);
+        const missing = text === "Não informado";
+
+        return `
+            <tr>
+                <td class="survey-question">${escapeHtml(field.label)}</td>
+                <td class="survey-answer ${missing ? "missing" : ""}">
+                    ${escapeHtml(text)}
+                </td>
+            </tr>
+        `;
+
+    }).join("");
+
+    return `
+        <section class="detail-section">
+            <h3 class="detail-section-title">Entrevista de desligamento</h3>
+            <div class="survey-table-wrap">
+                <table class="survey-table">
+                    <thead>
+                        <tr>
+                            <th>INFORMAÇÃO</th>
+                            <th>RESPOSTA</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        </section>
+    `;
+}
+
+function calcularTempoEmpresa(dataValor) {
+
+    const inicio = obterTimestamp(dataValor);
+    if (!inicio) return "Não informado";
+
+    const hoje = new Date();
+
+    let anos = hoje.getFullYear() - inicio.getUTCFullYear();
+    let mesesPassados = hoje.getMonth() - inicio.getUTCMonth();
+
+    if (hoje.getDate() < inicio.getUTCDate()) {
+        mesesPassados--;
+    }
+
+    if (mesesPassados < 0) {
+        anos--;
+        mesesPassados += 12;
+    }
+
+    if (anos < 0) return "Data inválida";
+
+    const partes = [];
+
+    if (anos > 0) {
+        partes.push(`${anos} ${anos === 1 ? "ano" : "anos"}`);
+    }
+
+    if (mesesPassados > 0) {
+        partes.push(`${mesesPassados} ${mesesPassados === 1 ? "mês" : "meses"}`);
+    }
+
+    return partes.length ? partes.join(" e ") : "Menos de um mês";
+}
+
+function abrirFicha(item) {
+
+    const saida = item.tipoMovimentacao === "Desligamento";
+    const nome = obterNome(item);
+    const departamento = obterDepartamento(item);
+    const cargo = obterCargo(item);
+
+    document.getElementById("modalKicker").textContent =
+        saida ? "ENTREVISTA DE DESLIGAMENTO" : "FICHA PROFISSIONAL";
+
+    document.getElementById("modalTitle").textContent = nome;
+
+    document.getElementById("modalSubtitle").textContent =
+        `${departamento} · ${cargo}`;
+
+    let html = `
+
+        <div class="profile-banner">
+
+            <div class="avatar ${saida ? "" : "hire"}">
+                ${escapeHtml(iniciais(nome))}
+            </div>
+
+            <div class="profile-main">
+                <div class="profile-name">${escapeHtml(nome)}</div>
+                <div class="profile-meta">
+                    ${escapeHtml(departamento)} · ${escapeHtml(cargo)}
+                </div>
+            </div>
+
+            <span class="profile-type ${saida ? "" : "hire"}">
+                ${saida ? "DESLIGAMENTO" : "CONTRATAÇÃO"}
+            </span>
+
+        </div>
+
+    `;
+
+    if (saida) {
+
+        html += criarTabelaDesligamento(item);
+
+    } else {
+
+        const admissao = obterDataContratacao(item);
+
+        const cargaHoraria = obterValor(
+            item,
+            ["carga_horaria","carga horária","jornada"]
+        );
+
+        html += `
+
+            <section class="detail-section">
+
+                <h3 class="detail-section-title">
+                    Informações profissionais
+                </h3>
+
+                <div class="detail-grid">
+
+                    ${criarCard("Nome completo",nome)}
+                    ${criarCard("Empresa / Unidade",departamento)}
+                    ${criarCard("Cargo",cargo)}
+                    ${criarCard("Data de contratação",formatarData(admissao))}
+                    ${criarCard("Tempo de empresa",calcularTempoEmpresa(admissao))}
+
+                    ${criarCard(
+                        "Carga horária",
+                        cargaHoraria !== "Não informado"
+                            ? `${cargaHoraria} horas`
+                            : "Não informado"
+                    )}
+
+                </div>
+
+            </section>
+
+        `;
+
+    }
+
+    document.getElementById("modalContent").innerHTML = html;
+    document.getElementById("detailModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+}
+
+function fecharModal() {
+    document.getElementById("detailModal").classList.remove("open");
+    document.body.style.overflow = "";
+}
+
+/* =========================================================
+   EVENTOS
+========================================================= */
+
+document.getElementById("closeModal").addEventListener(
+    "click",
+    fecharModal
+);
+
+document.getElementById("detailModal").addEventListener(
+    "click",
+    event => {
+        if (event.target.id === "detailModal") fecharModal();
+    }
+);
+
+document.addEventListener("keydown",event => {
+    if (event.key === "Escape") fecharModal();
+});
+
+document.getElementById("searchInput").addEventListener(
+    "input",
+    event => {
+
+        const busca = normalizarTexto(event.target.value);
+
+        renderEmployees(
+            todosRegistros.filter(item =>
+                normalizarTexto(obterNome(item)).includes(busca) ||
+                normalizarTexto(obterDepartamento(item)).includes(busca) ||
+                normalizarTexto(obterCargo(item)).includes(busca)
+            )
+        );
+
+    }
+);
+
+document.getElementById("clearSearch").addEventListener(
+    "click",
+    () => {
+        document.getElementById("searchInput").value = "";
+        renderEmployees(todosRegistros);
+    }
+);
+
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
+
+if (window.lucide) {
+    lucide.createIcons();
+}
+
+buscarDados();
+
+</script>
+</body>
+</html>
