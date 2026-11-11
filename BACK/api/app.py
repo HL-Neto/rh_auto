@@ -11,7 +11,9 @@ from BACK.modules.desligamento_module import get_desligamentos, get_contratacoes
 BASE_DIR  = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 FRONT_DIR = os.path.join(BASE_DIR, "FRONT")
 
-app = Flask( __name__,template_folder=FRONT_DIR
+app = Flask( __name__,template_folder=FRONT_DIR,
+    static_folder=os.path.join(FRONT_DIR, "static"),
+    static_url_path="/static"
 )
 
 logging.basicConfig(

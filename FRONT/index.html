@@ -1,31 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#09090c">
     <title>Motomar · Gestão de Vendedores</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --red: #e50914;
-            --red-dark: #b20710;
-            --red-soft: #fff1f2;
-            --black: #0b0b0d;
-            --black-2: #151518;
-            --black-3: #202024;
-            --white: #ffffff;
-            --background: #f5f5f5;
-            --text: #171719;
-            --muted: #77777f;
-            --border: #e7e7e9;
-            --sidebar: 255px;
-            --radius: 16px;
+            --bg: #0d0d11;
+            --panel: #16161b;
+            --panel-2: #1c1c22;
+            --field: #101014;
+            --line: #27272e;
+            --line-2: #34343d;
+            --ink: #f2f2f5;
+            --muted: #9a9aa4;
+            --faint: #62626d;
+            --red: #e8102e;
+            --red-deep: #b80c22;
+            --red-soft: rgba(232, 16, 46, .14);
+            --white: #f2f2f5;
+            --green: #2fd377;
+            --sidebar: 258px;
+            --r-panel: 14px;
+            --r-ctrl: 9px;
+            --ease: cubic-bezier(.2, .7, .2, 1);
         }
 
         * {
@@ -39,9 +44,16 @@
         }
 
         body {
-            font-family: "DM Sans", sans-serif;
-            background: var(--background);
-            color: var(--text);
+            font-family: "Archivo", sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection {
+            background: var(--red);
+            color: white;
         }
 
         body.loading-active {
@@ -52,11 +64,27 @@
         input,
         textarea {
             font: inherit;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
         }
 
         button:disabled {
-            opacity: .65;
+            opacity: .55;
             cursor: wait;
+        }
+
+        a,
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :is(a, button, input, textarea):focus-visible {
+            outline: 2px solid var(--red);
+            outline-offset: 2px;
+            border-radius: 4px;
         }
 
         /* SIDEBAR */
@@ -67,8 +95,9 @@
             left: 0;
             width: var(--sidebar);
             height: 100vh;
-            background: var(--black);
-            padding: 28px 18px;
+            background: #09090c;
+            border-right: 1px solid #1e1e24;
+            padding: 30px 18px 24px;
             display: flex;
             flex-direction: column;
             z-index: 1000;
@@ -77,41 +106,70 @@
         .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 13px;
             padding: 0 10px;
-            margin-bottom: 40px;
+            margin-bottom: 42px;
         }
 
         .brand-logo {
-            width: 38px;
-            height: 38px;
-            border-radius: 11px;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 9px;
             background: var(--red);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            font-stretch: 122%;
             font-weight: 800;
-            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 19px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-logo::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(115deg, transparent 0 62%, rgba(255, 255, 255, .25) 62% 72%, transparent 72% 78%, rgba(255, 255, 255, .13) 78% 84%, transparent 84%);
         }
 
         .brand-text {
             color: white;
-            font-family: "Plus Jakarta Sans", sans-serif;
+            font-stretch: 122%;
             font-weight: 800;
-            font-size: 18px;
+            font-size: 17px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            line-height: 1.2;
         }
 
         .brand-text span {
-            color: var(--red);
+            display: block;
+            color: var(--faint);
+            font-stretch: 100%;
+            font-weight: 500;
+            font-size: 10.5px;
+            text-transform: none;
+            letter-spacing: .02em;
+            margin-top: 2px;
+        }
+
+        .brand-logo-img {
+            width: 100%;
+            max-width: 215px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
         }
 
         .menu-title {
-            color: #67676d;
+            color: var(--faint);
             font-size: 11px;
             font-weight: 700;
+            letter-spacing: .08em;
             text-transform: uppercase;
-            letter-spacing: 1px;
             padding: 0 12px;
             margin-bottom: 10px;
         }
@@ -119,150 +177,218 @@
         .menu {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
         }
 
         .menu a {
+            position: relative;
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 13px;
-            border-radius: 10px;
-            color: #aaaab0;
+            padding: 12px 14px;
+            border-radius: var(--r-ctrl);
+            color: #8e8e98;
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: .2s;
+            font-size: 13.5px;
+            font-weight: 600;
+            transition: background .2s var(--ease), color .2s var(--ease);
         }
 
-        .menu a:hover,
-        .menu a.active {
-            background: var(--black-3);
+        .menu a:hover {
+            background: #131318;
             color: white;
         }
 
         .menu a.active {
-            box-shadow: inset 3px 0 0 var(--red);
+            background: #1a1a20;
+            color: white;
+        }
+
+        .menu a.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 9px;
+            bottom: 9px;
+            width: 3px;
+            border-radius: 3px;
+            background: var(--red);
         }
 
         .menu-icon {
-            width: 20px;
-            text-align: center;
-            font-size: 15px;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            display: inline-flex;
+        }
+
+        .menu-icon svg {
+            width: 100%;
+            height: 100%;
         }
 
         .sidebar-bottom {
             margin-top: auto;
-            border-top: 1px solid #252529;
-            padding: 18px 10px 0;
-            color: #67676d;
+            border-top: 1px solid #1e1e24;
+            padding: 18px 12px 0;
+            color: var(--faint);
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .sidebar-dot {
+            width: 7px;
+            height: 7px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(47, 211, 119, .5);
         }
 
         /* CONTEÚDO */
 
         .main {
             margin-left: var(--sidebar);
-            padding: 30px;
+            padding: 34px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1280px;
             margin: 0 auto;
         }
 
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container > * {
+            animation: rise .55s var(--ease) backwards;
+        }
+
+        .container > *:nth-child(1) { animation-delay: .03s; }
+        .container > *:nth-child(2) { animation-delay: .09s; }
+        .container > *:nth-child(3) { animation-delay: .15s; }
+        .container > *:nth-child(4) { animation-delay: .21s; }
+
+        /* CABEÇALHO DA PÁGINA */
+
+        .page-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .page-head h1 {
+            font-stretch: 124%;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: clamp(24px, 2.6vw, 34px);
+            letter-spacing: .01em;
+            line-height: 1.05;
+        }
+
+        .page-head h1 span {
+            color: var(--red);
+        }
+
+        .page-head p {
+            color: var(--muted);
+            font-size: 13.5px;
+            line-height: 1.65;
+            margin-top: 9px;
+            max-width: 560px;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--line);
+            background: var(--panel);
+            color: var(--muted);
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-chip .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(47, 211, 119, .6);
+        }
+
+        /* FAIXA DE LIVERY */
+
+        .livery {
+            height: 7px;
+            border-radius: 4px;
+            margin-bottom: 26px;
+            background:
+                linear-gradient(104deg,
+                    var(--red) 0 54%,
+                    transparent 54% 57%,
+                    var(--red) 57% 62%,
+                    transparent 62% 65%,
+                    rgba(242, 242, 245, .85) 65% 69%,
+                    transparent 69% 71%,
+                    rgba(242, 242, 245, .35) 71% 73%,
+                    transparent 73%),
+                var(--panel);
+        }
+
+        /* SEÇÕES */
+
         .section {
-            margin-bottom: 40px;
             scroll-margin-top: 30px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            font-stretch: 116%;
+            font-size: 17px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 5px;
+            height: 17px;
+            flex-shrink: 0;
+            border-radius: 3px;
+            background: var(--red);
+        }
+
+        .section-description {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
+            gap: 16px;
             margin-bottom: 16px;
-        }
-
-        .section-title {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 21px;
-            font-weight: 800;
-            margin-bottom: 5px;
-        }
-
-        .section-description {
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        /* HERO */
-
-        .hero {
-            position: relative;
-            overflow: hidden;
-            background:
-                radial-gradient(circle at 90% 10%, rgba(229, 9, 20, .30), transparent 35%),
-                linear-gradient(135deg, #101014, #1a1a1f);
-            border-radius: 22px;
-            padding: 42px;
-            color: white;
-            margin-bottom: 25px;
-        }
-
-        .hero::after {
-            content: "";
-            position: absolute;
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: rgba(229, 9, 20, .08);
-            right: -70px;
-            bottom: -100px;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 700px;
-        }
-
-        .hero-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: rgba(229, 9, 20, .12);
-            color: #ff6870;
-            border: 1px solid rgba(229, 9, 20, .25);
-            padding: 7px 11px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 18px;
-        }
-
-        .hero-label span {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #36d67a;
-        }
-
-        .hero h1 {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 34px;
-            line-height: 1.15;
-            margin-bottom: 12px;
-        }
-
-        .hero h1 span {
-            color: var(--red);
-        }
-
-        .hero p {
-            color: #a6a6ad;
-            line-height: 1.7;
-            font-size: 15px;
         }
 
         /* ESTATÍSTICAS */
@@ -270,78 +396,122 @@
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-bottom: 35px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--r-panel);
+            overflow: hidden;
+            margin-bottom: 26px;
         }
 
         .stat-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 23px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            padding: 22px 26px;
+        }
+
+        .stat-card + .stat-card {
+            border-left: 1px solid var(--line);
         }
 
         .stat-icon {
-            width: 48px;
-            height: 48px;
-            flex-shrink: 0;
-            border-radius: 13px;
-            background: var(--red-soft);
-            color: var(--red);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: none;
+        }
+
+        .stat-info strong {
+            display: block;
+            color: white;
+            font-stretch: 120%;
             font-weight: 800;
+            font-size: 30px;
+            letter-spacing: -.01em;
+            line-height: 1.15;
         }
 
         .stat-info span {
             display: block;
-            font-size: 12px;
             color: var(--muted);
-            margin-bottom: 4px;
+            font-size: 12.5px;
+            margin-top: 6px;
         }
 
-        .stat-info strong {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 23px;
+        /* GRID PRINCIPAL */
+
+        .deck {
+            display: grid;
+            grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+            gap: 20px;
+            align-items: start;
+            margin-bottom: 26px;
+        }
+
+        .rail {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
         }
 
         /* CARTÕES */
 
         .ai-card,
         .search-card,
-        .documents-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 25px;
+        .documents-card,
+        .process-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--r-panel);
+            padding: 26px;
+            min-width: 0;
+        }
+
+        .card-kicker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-stretch: 114%;
+            font-size: 14.5px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .card-kicker::before {
+            content: "";
+            width: 4px;
+            height: 15px;
+            flex-shrink: 0;
+            border-radius: 3px;
+            background: var(--red);
+        }
+
+        .card-sub {
+            color: var(--muted);
+            font-size: 12.5px;
+            line-height: 1.6;
+            margin-bottom: 18px;
         }
 
         .ai-card-header {
             display: flex;
             align-items: center;
-            gap: 13px;
-            margin-bottom: 17px;
+            gap: 14px;
+            margin-bottom: 16px;
         }
 
         .ai-icon {
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            background: var(--black);
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: var(--red);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .ai-card-header h3 {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 16px;
+            font-stretch: 112%;
+            font-size: 15px;
+            font-weight: 800;
             margin-bottom: 3px;
         }
 
@@ -350,34 +520,27 @@
             font-size: 12px;
         }
 
-        .ai-description {
-            color: var(--muted);
-            font-size: 14px;
-            margin-bottom: 18px;
-            line-height: 1.6;
-        }
-
         .command-examples {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .command-example {
-            border: 1px solid var(--border);
-            background: #fafafa;
-            color: #555;
+            border: 1px solid var(--line-2);
+            background: var(--field);
+            color: var(--muted);
             border-radius: 999px;
-            padding: 8px 12px;
+            padding: 8px 14px;
             font-size: 12px;
-            cursor: pointer;
-            transition: .2s;
+            font-weight: 500;
+            transition: border-color .2s, color .2s, background .2s;
         }
 
         .command-example:hover {
             border-color: var(--red);
-            color: var(--red);
+            color: white;
             background: var(--red-soft);
         }
 
@@ -385,22 +548,29 @@
             width: 100%;
             min-height: 120px;
             resize: vertical;
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            border: 1px solid var(--line-2);
+            border-radius: 11px;
+            background: var(--field);
             padding: 15px;
             font-size: 14px;
+            line-height: 1.6;
             outline: none;
-            transition: .2s;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .command-input::placeholder,
+        .input-wrapper input::placeholder {
+            color: var(--faint);
         }
 
         .command-input:focus,
         .input-wrapper input:focus {
             border-color: var(--red);
-            box-shadow: 0 0 0 3px rgba(229, 9, 20, .08);
+            box-shadow: 0 0 0 3px rgba(232, 16, 46, .15);
         }
 
         .ai-footer {
-            margin-top: 15px;
+            margin-top: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -419,7 +589,7 @@
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: #28c76f;
+            background: var(--green);
         }
 
         /* BOTÕES */
@@ -434,40 +604,47 @@
             justify-content: center;
             gap: 8px;
             border: none;
-            border-radius: 10px;
-            padding: 12px 18px;
-            font-size: 13px;
+            border-radius: var(--r-ctrl);
+            min-height: 44px;
+            padding: 11px 20px;
+            font-size: 13.5px;
             font-weight: 700;
             text-decoration: none;
             cursor: pointer;
-            transition: .2s;
             white-space: nowrap;
+            transition: background .2s var(--ease), transform .15s var(--ease), color .2s;
+        }
+
+        .process-button:active,
+        .ai-command-button:active,
+        .search-button:active,
+        .upload-button:active,
+        .export-pdf-button:active {
+            transform: translateY(1px);
         }
 
         .process-button,
-        .upload-button {
+        .upload-button,
+        .ai-command-button {
             background: var(--red);
             color: white;
         }
 
-        .process-button:hover,
-        .upload-button:hover {
-            background: var(--red-dark);
-            transform: translateY(-1px);
+        .process-button:hover:not(:disabled),
+        .upload-button:hover:not(:disabled),
+        .ai-command-button:hover:not(:disabled) {
+            background: var(--red-deep);
         }
 
-        .ai-command-button,
         .search-button,
         .export-pdf-button {
-            background: var(--black);
-            color: white;
+            background: var(--white);
+            color: #101014;
         }
 
-        .ai-command-button:hover,
-        .search-button:hover,
+        .search-button:hover:not(:disabled),
         .export-pdf-button:hover {
-            background: #29292d;
-            transform: translateY(-1px);
+            background: #d6d6dd;
         }
 
         /* PESQUISA */
@@ -483,22 +660,38 @@
 
         .input-wrapper input {
             width: 100%;
-            height: 45px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
+            height: 44px;
+            border: 1px solid var(--line-2);
+            border-radius: var(--r-ctrl);
+            background: var(--field);
             padding: 0 14px;
             outline: none;
             font-size: 14px;
+            transition: border-color .2s, box-shadow .2s;
         }
 
         /* VENDEDORES */
 
         .seller-list {
-            margin-top: 15px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
+            margin-top: 16px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--r-panel);
             overflow: hidden;
+        }
+
+        .seller-head {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            padding: 13px 22px;
+            background: var(--panel-2);
+            border-bottom: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .05em;
+            text-transform: uppercase;
         }
 
         .seller-row {
@@ -506,8 +699,13 @@
             grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
             align-items: center;
             gap: 20px;
-            padding: 17px 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--line);
+            transition: background .15s;
+        }
+
+        .seller-row:hover {
+            background: var(--panel-2);
         }
 
         .seller-row:last-child {
@@ -517,25 +715,27 @@
         .seller-main {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 13px;
             min-width: 0;
         }
 
         .seller-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             flex-shrink: 0;
-            border-radius: 11px;
-            background: var(--black);
+            border-radius: 9px;
+            background: var(--red);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 12px;
+            font-stretch: 116%;
             font-weight: 800;
         }
 
         .seller-name {
+            color: white;
             font-weight: 700;
             font-size: 14px;
             margin-bottom: 3px;
@@ -543,34 +743,35 @@
         }
 
         .seller-id {
-            color: var(--muted);
+            color: var(--faint);
             font-size: 11px;
         }
 
         .seller-field span {
             display: block;
-            color: var(--muted);
+            color: var(--faint);
             font-size: 11px;
             margin-bottom: 4px;
         }
 
         .seller-field strong {
-            font-size: 13px;
+            font-size: 13.5px;
             overflow-wrap: anywhere;
         }
 
         .seller-field .bonus {
-            color: #1a9c52;
+            color: var(--green);
         }
 
         .empty-state {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 35px;
+            margin-top: 16px;
+            background: var(--panel);
+            border: 1px dashed var(--line-2);
+            border-radius: var(--r-panel);
+            padding: 38px;
             text-align: center;
             color: var(--muted);
-            font-size: 14px;
+            font-size: 13.5px;
             line-height: 1.7;
         }
 
@@ -578,74 +779,56 @@
 
         .upload-form {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: stretch;
             gap: 12px;
         }
 
         .upload-form input[type="file"] {
-            flex: 1;
             min-width: 0;
-            border: 1px dashed #cfcfd3;
-            border-radius: 10px;
-            padding: 11px;
+            border: 1px dashed var(--line-2);
+            border-radius: var(--r-ctrl);
+            padding: 12px;
             font-size: 13px;
-            background: #fafafa;
+            background: var(--field);
+            color: var(--muted);
+            transition: border-color .2s;
+        }
+
+        .upload-form input[type="file"]:hover {
+            border-color: var(--red);
+        }
+
+        .upload-form input[type="file"]::file-selector-button {
+            border: none;
+            border-radius: 7px;
+            background: var(--white);
+            color: #101014;
+            font: inherit;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 8px 13px;
+            margin-right: 12px;
+            cursor: pointer;
         }
 
         .selected-files {
             color: var(--muted);
-            font-size: 12px;
+            font-size: 12.5px;
             margin-top: 12px;
             overflow-wrap: anywhere;
         }
 
         /* PROCESSAMENTO */
 
-        .process-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 25px;
-            flex-wrap: wrap;
-        }
-
-        .process-card-content {
-            display: flex;
-            align-items: center;
-            gap: 17px;
-            flex: 1;
-            min-width: 220px;
-        }
-
-        .process-icon {
-            width: 54px;
-            height: 54px;
-            flex-shrink: 0;
-            background: var(--red-soft);
-            color: var(--red);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 13px;
-        }
-
-        .process-card h3 {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 16px;
-            margin-bottom: 6px;
-        }
-
         .process-card p {
             color: var(--muted);
             font-size: 13px;
-            line-height: 1.6;
-            max-width: 700px;
+            line-height: 1.65;
+        }
+
+        .process-icon {
+            display: none;
         }
 
         .process-actions {
@@ -653,31 +836,57 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .process-actions form,
+        .process-actions a {
+            flex: 1;
+        }
+
+        .process-actions button,
+        .process-actions a {
+            width: 100%;
         }
 
         /* RESULTADO DA IA */
 
         .ai-result {
-            margin-top: 20px;
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
+            margin-top: 22px;
+            background: var(--field);
+            border: 1px solid var(--line-2);
+            border-radius: var(--r-panel);
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-result::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--red) 0 42%, rgba(232, 16, 46, .35) 42% 56%, transparent 56%);
         }
 
         .ai-result-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--line);
         }
 
         .ai-result-icon {
-            width: 38px;
-            height: 38px;
-            background: var(--red-soft);
-            color: var(--red);
-            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            background: var(--red);
+            color: white;
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -688,6 +897,11 @@
             display: block;
         }
 
+        .ai-result-header strong {
+            color: white;
+            font-stretch: 112%;
+        }
+
         .ai-result-header span {
             color: var(--muted);
             font-size: 12px;
@@ -696,7 +910,7 @@
 
         .ai-result-content {
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.75;
             white-space: pre-wrap;
             overflow-wrap: anywhere;
         }
@@ -711,7 +925,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
-            background: rgba(11, 11, 13, .96);
+            background: rgba(9, 9, 12, .97);
             color: white;
             backdrop-filter: blur(8px);
         }
@@ -724,15 +938,16 @@
             width: 100%;
             max-width: 390px;
             text-align: center;
-            animation: loadingAppear .25s ease-out;
+            animation: loadingAppear .3s var(--ease);
         }
 
         .loading-logo {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 29px;
+            font-stretch: 124%;
             font-weight: 800;
-            letter-spacing: 3px;
-            margin-bottom: 35px;
+            font-size: 27px;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            margin-bottom: 34px;
         }
 
         .loading-logo span {
@@ -740,24 +955,24 @@
         }
 
         .loader {
-            width: 58px;
-            height: 58px;
+            width: 56px;
+            height: 56px;
             margin: 0 auto 28px;
-            border: 4px solid #303035;
+            border: 4px solid var(--line-2);
             border-top-color: var(--red);
-            border-right-color: var(--red);
             border-radius: 50%;
             animation: girar .8s linear infinite;
         }
 
         .loading-content h2 {
-            font-family: "Plus Jakarta Sans", sans-serif;
-            font-size: 21px;
+            font-stretch: 114%;
+            font-size: 20px;
+            font-weight: 800;
             margin-bottom: 10px;
         }
 
         .loading-content p {
-            color: #a6a6ad;
+            color: var(--muted);
             font-size: 14px;
             line-height: 1.7;
         }
@@ -765,10 +980,10 @@
         .loading-progress {
             height: 4px;
             width: 100%;
-            background: #29292e;
+            background: var(--line-2);
             border-radius: 999px;
             overflow: hidden;
-            margin-top: 25px;
+            margin-top: 26px;
         }
 
         .loading-progress span {
@@ -790,6 +1005,7 @@
             0% {
                 transform: translateX(-110%);
             }
+
             100% {
                 transform: translateX(300%);
             }
@@ -800,6 +1016,7 @@
                 opacity: 0;
                 transform: translateY(8px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -825,10 +1042,35 @@
             gap: 12px;
             padding: 16px;
             border-radius: 12px;
-            background: white;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, .15);
-            border: 1px solid var(--border);
-            animation: loadingAppear .25s ease-out;
+            background: var(--panel-2);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
+            border: 1px solid var(--line-2);
+            border-left-width: 3px;
+            animation: toastIn .3s var(--ease);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left-color: var(--green);
+        }
+
+        .toast.error {
+            border-left-color: var(--red);
+        }
+
+        .toast.info {
+            border-left-color: var(--white);
         }
 
         .toast-icon {
@@ -843,8 +1085,8 @@
         }
 
         .toast.success .toast-icon {
-            background: #e8f8ee;
-            color: #168345;
+            background: rgba(47, 211, 119, .16);
+            color: var(--green);
         }
 
         .toast.error .toast-icon {
@@ -853,19 +1095,20 @@
         }
 
         .toast.info .toast-icon {
-            background: #edf3ff;
-            color: #2459a9;
+            background: rgba(242, 242, 245, .12);
+            color: var(--white);
         }
 
         .toast strong {
             display: block;
+            color: white;
             font-size: 14px;
             margin-bottom: 4px;
         }
 
         .toast p {
             color: var(--muted);
-            font-size: 12px;
+            font-size: 12.5px;
             line-height: 1.6;
             overflow-wrap: anywhere;
         }
@@ -873,10 +1116,17 @@
         /* RESPONSIVO */
 
         @media (max-width: 1100px) {
+            .deck {
+                grid-template-columns: 1fr;
+            }
+
+            .seller-head,
             .seller-row {
                 grid-template-columns: 2fr 1fr 1fr;
             }
 
+            .seller-head span:nth-child(4),
+            .seller-head span:nth-child(5),
             .seller-field:nth-child(4),
             .seller-field:nth-child(5) {
                 display: none;
@@ -892,16 +1142,37 @@
                 position: relative;
                 width: 100%;
                 height: auto;
-                padding: 15px;
+                padding: 16px;
+                border-right: none;
+                border-bottom: 1px solid #1e1e24;
             }
 
             .brand {
-                margin-bottom: 15px;
+                margin-bottom: 16px;
             }
 
             .menu {
                 flex-direction: row;
                 overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .menu::-webkit-scrollbar {
+                display: none;
+            }
+
+            .menu a {
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .menu a.active::before {
+                top: auto;
+                left: 12px;
+                right: 12px;
+                bottom: 4px;
+                width: auto;
+                height: 3px;
             }
 
             .menu-title,
@@ -909,37 +1180,37 @@
                 display: none;
             }
 
-            .menu a {
-                white-space: nowrap;
-            }
-
             .main {
                 margin-left: 0;
                 padding: 20px;
+            }
+
+            .page-head {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
             }
 
             .stats {
                 grid-template-columns: 1fr;
             }
 
-            .hero {
-                padding: 28px;
+            .stat-card + .stat-card {
+                border-left: none;
+                border-top: 1px solid var(--line);
             }
 
-            .hero h1 {
-                font-size: 27px;
-            }
-
-            .search-form,
-            .upload-form {
+            .search-form {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .search-button,
-            .upload-button {
+            .search-button {
                 width: 100%;
-                min-height: 45px;
+            }
+
+            .seller-head {
+                display: none;
             }
 
             .seller-row {
@@ -951,25 +1222,6 @@
             .seller-field:nth-child(5) {
                 display: block;
             }
-
-            .process-card {
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .process-actions {
-                width: 100%;
-            }
-
-            .process-actions form,
-            .process-actions a {
-                flex: 1;
-            }
-
-            .process-actions button,
-            .process-actions a {
-                width: 100%;
-            }
         }
 
         @media (max-width: 550px) {
@@ -977,12 +1229,8 @@
                 padding: 14px;
             }
 
-            .hero {
-                padding: 24px;
-            }
-
-            .hero h1 {
-                font-size: 24px;
+            .page-head h1 {
+                font-size: 23px;
             }
 
             .ai-footer {
@@ -992,7 +1240,6 @@
 
             .ai-command-button {
                 width: 100%;
-                min-height: 45px;
             }
 
             .process-actions {
@@ -1029,7 +1276,7 @@
     <!-- TELA DE LOADING -->
     <div id="loading" class="loading-screen" aria-live="polite" aria-busy="true">
         <div class="loading-content">
-            <div class="loading-logo">MOTO<span>MAR.</span></div>
+            <div class="loading-logo">MOTO<span>MAR</span></div>
             <div class="loader"></div>
             <h2 id="loading-title">Processando...</h2>
             <p id="loading-text">Aguarde enquanto o sistema executa sua solicitação.</p>
@@ -1045,36 +1292,44 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="brand">
-            <div class="brand-logo">RH</div>
-            <div class="brand-text">Moto<span>mar</span></div>
+            <img class="brand-logo-img" src="/static/motomar_rh.svg" alt="Motomar · Recursos Humanos">
         </div>
 
         <div class="menu-title">Menu</div>
 
-        <nav class="menu">
+        <nav class="menu" aria-label="Navegação principal">
             <a href="#dashboard" class="active">
-                <span class="menu-icon">▦</span>
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>
+                </span>
                 Gestão de vendedores
             </a>
 
             <a href="/cadastro">
-                <span class="menu-icon">＋</span>
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+                </span>
                 Novo vendedor
             </a>
-            
+
             <a href="/curriculo">
-                <span class="menu-icon">☷</span>
-                Triagem de curriculos
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+                </span>
+                Triagem de currículos
             </a>
+
             <a href="/desligamento">
-                <span class="menu-icon">↗</span>
-                Desligamentos
+                <span class="menu-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                </span>
+                TurnOver
             </a>
-        </nav>
         </nav>
 
         <div class="sidebar-bottom">
-            Motomar · Sistema interno
+            <span class="sidebar-dot"></span>
+            Sistema interno Motomar
         </div>
     </aside>
 
@@ -1082,134 +1337,197 @@
     <main class="main">
         <div class="container">
 
-            <!-- DASHBOARD -->
+            <!-- CABEÇALHO + INDICADORES -->
             <section class="section" id="dashboard">
-                <div class="hero">
-                    <div class="hero-content">
-                        <div class="hero-label">
-                            <span></span>
-                            Sistema operacional
-                        </div>
-
-                        <h1>
-                            Gestão de vendedores
-                            <span>Motomar</span>
-                        </h1>
-
+                <div class="page-head">
+                    <div>
+                        <h1>Gestão de <span>vendedores</span></h1>
                         <p>
-                            Gerencie vendedores, metas, vendas e bonificações
-                            em um único ambiente. Utilize as ferramentas de IA
-                            para automatizar o processamento dos dados.
+                            Gerencie vendedores, metas, vendas e bonificações em um único
+                            ambiente, com processamento automático por IA.
                         </p>
                     </div>
+
+                    <div class="status-chip">
+                        <span class="dot"></span>
+                        Sistema operacional
+                    </div>
                 </div>
+
+                <div class="livery" aria-hidden="true"></div>
 
                 <div class="stats">
                     <div class="stat-card">
                         <div class="stat-icon">US</div>
                         <div class="stat-info">
-                            <span>Vendedores cadastrados</span>
                             <strong>{{ vendedores|length if vendedores else 0 }}</strong>
+                            <span>Vendedores cadastrados</span>
                         </div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-icon">IA</div>
                         <div class="stat-info">
-                            <span>Processamento inteligente</span>
                             <strong>Ativo</strong>
+                            <span>Processamento inteligente</span>
                         </div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-icon">PDF</div>
                         <div class="stat-info">
-                            <span>Relatórios</span>
                             <strong>PDF</strong>
+                            <span>Relatórios de bonificação</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- ASSISTENTE IA -->
-            <section class="section" id="ia">
-                <div class="section-header">
-                    <div>
-                        <div class="section-title">Assistente IA</div>
-                        <div class="section-description">
-                            Consulte e gerencie os vendedores utilizando linguagem natural.
-                        </div>
-                    </div>
-                </div>
+            <!-- ASSISTENTE IA + DOCUMENTOS -->
+            <div class="deck">
 
-                <div class="ai-card">
-                    <div class="ai-card-header">
-                        <div class="ai-icon">✦</div>
-                        <div>
-                            <h3>Assistente de operações</h3>
-                            <span>Inteligência artificial</span>
-                        </div>
-                    </div>
-
-                    <p class="ai-description">
-                        Digite um comando para consultar ou gerenciar os vendedores cadastrados.
-                    </p>
-
-                    <div class="command-examples">
-                        <button type="button" class="command-example"
-                            onclick="setCommand('Quais vendedores não bateram a meta?')">
-                            Quais vendedores não bateram a meta?
-                        </button>
-
-                        <button type="button" class="command-example"
-                            onclick="setCommand('Alterar meta do vendedor :   para :')">
-                            Alterar meta do vendedor :   para :
-                        </button>
-
-                        <button type="button" class="command-example"
-                            onclick="setCommand('Adicionar o vendedor :  meta :  motos : pops : vendas no cartão : pops : outros :')">
-                            Adicionar o vendedor :  meta :  motos : pops : vendas no cartão : pops : outros :
-                        </button>
-                    </div>
-
-                    <form action="/llm" method="POST"
-                        data-loading-title="Executando comando"
-                        data-loading-message="A inteligência artificial está processando sua solicitação.">
-
-                        <textarea
-                            id="comando"
-                            name="comando"
-                            class="command-input"
-                            placeholder="Digite um comando para a IA..."
-                            required></textarea>
-
-                        <div class="ai-footer">
-                            <div class="ai-status">
-                                <span class="status-dot"></span>
-                                Assistente conectado
+                <section class="section" id="ia">
+                    <div class="ai-card">
+                        <div class="ai-card-header">
+                            <div class="ai-icon">✦</div>
+                            <div>
+                                <h3>Assistente de operações</h3>
+                                <span>Consulte e gerencie vendedores em linguagem natural</span>
                             </div>
+                        </div>
 
-                            <button type="submit" class="ai-command-button">
-                                Executar comando
+                        <div class="command-examples">
+                            <button type="button" class="command-example"
+                                onclick="setCommand('Quais vendedores não bateram a meta?')">
+                                Quais vendedores não bateram a meta?
+                            </button>
+
+                            <button type="button" class="command-example"
+                                onclick="setCommand('Alterar meta do vendedor :   para :')">
+                                Alterar meta do vendedor :   para :
+                            </button>
+
+                            <button type="button" class="command-example"
+                                onclick="setCommand('Adicionar o vendedor :  meta :  motos : pops : vendas no cartão : pops : outros :')">
+                                Adicionar o vendedor :  meta :  motos : pops : vendas no cartão : pops : outros :
                             </button>
                         </div>
-                    </form>
 
-                    {% if resultado %}
-                    <div class="ai-result">
-                        <div class="ai-result-header">
-                            <div class="ai-result-icon">✦</div>
-                            <div>
-                                <strong>Resposta da IA</strong>
-                                <span>Resultado do comando</span>
+                        <form action="/llm" method="POST"
+                            data-loading-title="Executando comando"
+                            data-loading-message="A inteligência artificial está processando sua solicitação.">
+
+                            <textarea
+                                id="comando"
+                                name="comando"
+                                class="command-input"
+                                placeholder="Digite um comando para a IA..."
+                                required></textarea>
+
+                            <div class="ai-footer">
+                                <div class="ai-status">
+                                    <span class="status-dot"></span>
+                                    Assistente conectado
+                                </div>
+
+                                <button type="submit" class="ai-command-button">
+                                    Executar comando
+                                </button>
+                            </div>
+                        </form>
+
+                        {% if resultado %}
+                        <div class="ai-result">
+                            <div class="ai-result-header">
+                                <div class="ai-result-icon">✦</div>
+                                <div>
+                                    <strong>Resposta da IA</strong>
+                                    <span>Resultado do comando</span>
+                                </div>
+                            </div>
+
+                            <div class="ai-result-content">{{ resultado }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </section>
+
+                <div class="rail">
+
+                    <section class="section" id="documentos">
+                        <div class="documents-card">
+                            <div class="card-kicker">Documentos</div>
+                            <p class="card-sub">
+                                Envie um ou vários relatórios PDF para o sistema.
+                            </p>
+
+                            <form
+                                id="upload-form"
+                                action="/upload-pdf"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                class="upload-form"
+                                data-loading-title="Enviando documentos"
+                                data-loading-message="Aguarde enquanto os PDFs são enviados para o sistema.">
+
+                                <input
+                                    id="pdf-files"
+                                    type="file"
+                                    name="arquivos"
+                                    accept=".pdf,application/pdf"
+                                    multiple
+                                    required>
+
+                                <button id="upload-button" type="submit" class="upload-button">
+                                    Enviar PDFs
+                                </button>
+                            </form>
+
+                            <div id="selected-files" class="selected-files">
+                                Nenhum arquivo selecionado.
                             </div>
                         </div>
+                    </section>
 
-                        <div class="ai-result-content">{{ resultado }}</div>
-                    </div>
-                    {% endif %}
+                    <section class="section" id="processamento">
+                        <div class="process-card">
+                            <div class="process-icon">PDF</div>
+                            <div class="card-kicker">Processamento de dados</div>
+                            <p>
+                                A IA analisa os relatórios PDF enviados, identifica vendedores,
+                                metas, motos e formas de pagamento e atualiza o banco. Depois,
+                                exporte o relatório consolidado.
+                            </p>
+
+                            <div class="process-actions">
+                                <form
+                                    action="/processar-pdfs"
+                                    method="POST"
+                                    data-loading-title="Processando PDFs"
+                                    data-loading-message="A IA está lendo os relatórios e atualizando os dados.">
+
+                                    <button type="submit" class="process-button">
+                                        Processar PDFs
+                                    </button>
+                                </form>
+
+                                <a
+                                    id="export-pdf"
+                                    href="/exportar-pdf"
+                                    class="export-pdf-button"
+                                    data-loading-title="Gerando relatório"
+                                    data-loading-message="Aguarde enquanto preparamos o PDF para exportação.">
+
+                                    <span class="export-pdf-icon">↓</span>
+                                    Exportar PDF
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
                 </div>
-            </section>
+
+            </div>
 
             <!-- BUSCAR VENDEDORES -->
             <section class="section" id="buscar">
@@ -1243,6 +1561,14 @@
 
                 {% if vendedores %}
                 <div class="seller-list">
+                    <div class="seller-head" aria-hidden="true">
+                        <span>Vendedor</span>
+                        <span>Tipo</span>
+                        <span>Meta</span>
+                        <span>Motos</span>
+                        <span>Bônus</span>
+                    </div>
+
                     {% for vendedor in vendedores %}
                     <div class="seller-row">
                         <div class="seller-main">
@@ -1286,96 +1612,6 @@
                     Utilize o campo acima para realizar uma consulta.
                 </div>
                 {% endif %}
-            </section>
-
-            <!-- DOCUMENTOS -->
-            <section class="section" id="documentos">
-                <div class="section-header">
-                    <div>
-                        <div class="section-title">Documentos</div>
-                        <div class="section-description">
-                            Envie um ou vários relatórios PDF para o sistema.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="documents-card">
-                    <form
-                        id="upload-form"
-                        action="/upload-pdf"
-                        method="POST"
-                        enctype="multipart/form-data"
-                        class="upload-form"
-                        data-loading-title="Enviando documentos"
-                        data-loading-message="Aguarde enquanto os PDFs são enviados para o sistema.">
-
-                        <input
-                            id="pdf-files"
-                            type="file"
-                            name="arquivos"
-                            accept=".pdf,application/pdf"
-                            multiple
-                            required>
-
-                        <button id="upload-button" type="submit" class="upload-button">
-                            Enviar PDFs
-                        </button>
-                    </form>
-
-                    <div id="selected-files" class="selected-files">
-                        Nenhum arquivo selecionado.
-                    </div>
-                </div>
-            </section>
-
-            <!-- PROCESSAMENTO E EXPORTAÇÃO -->
-            <section class="section" id="processamento">
-                <div class="section-header">
-                    <div>
-                        <div class="section-title">Processamento de dados</div>
-                        <div class="section-description">
-                            Leia os relatórios PDF e atualize os dados dos vendedores.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="process-card">
-                    <div class="process-card-content">
-                        <div class="process-icon">PDF</div>
-
-                        <div>
-                            <h3>Processar relatórios</h3>
-                            <p>
-                                A IA irá analisar os relatórios PDF, identificar os vendedores,
-                                metas, motos e formas de pagamento e atualizar os dados no banco.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="process-actions">
-                        <form
-                            action="/processar-pdfs"
-                            method="POST"
-                            data-loading-title="Processando PDFs"
-                            data-loading-message="A IA está lendo os relatórios e atualizando os dados.">
-
-                            <button type="submit" class="process-button">
-                                Processar PDFs
-                            </button>
-                        </form>
-
-                        <a
-                            id="export-pdf"
-                            href="/exportar-pdf"
-                            class="export-pdf-button"
-                            data-loading-title="Gerando relatório"
-                            data-loading-message="Aguarde enquanto preparamos o PDF para exportação.">
-
-                            <span class="export-pdf-icon">↓</span>
-                            Exportar PDF
-                        </a>
-                    </div>
-                </div>
             </section>
 
         </div>
@@ -1640,4 +1876,3 @@
 
 </body>
 </html>
-

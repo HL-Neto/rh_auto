@@ -21,8 +21,9 @@ cred = credentials.Certificate(os.getenv("FIREBASE_CREDENTIALS_PATH"))
 firebase_admin.initialize_app(cred)
     
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-PDF_DIR = BASE_DIR / "pdf"
+# Raiz do projeto (rh_auto), a mesma usada pelo upload em app.py.
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+PDF_DIR = BASE_DIR / "PDF"
 
 
 
@@ -163,7 +164,7 @@ def pdfRead():
                     "texto": texto_completo,
                 }
 
-            elif "comissoes" in nome and "pagamento" in nome:
+            elif "comissoes" in nome and ("pagamento" in nome or "pagar" in nome):
                 dados["vendas"] = {
                     "arquivo": arquivo.name,
                     "tabelas": tabelas,
