@@ -1,8 +1,12 @@
 
 import io
 import os
+import hashlib
 import secrets
 import logging
+from datetime import timedelta
+
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from flask                     import (Flask,request,render_template,send_file,jsonify,redirect,url_for,session)
 from BACK.modules.bonus_module import (add_user,pdfTurn,get_user,pdfRead,delet_pdfs)
@@ -19,9 +23,44 @@ app = Flask( __name__,template_folder=FRONT_DIR,
     static_url_path="/static"
 )
 
-# Sem FLASK_SECRET_KEY no .env, a chave muda a cada execução e todos
-# precisam entrar com o Google de novo após reiniciar o servidor.
-app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
+# O Render termina o HTTPS no proxy e repassa a requisição em HTTP.
+# Sem isso o Flask acharia que o site é http:// e o login quebraria.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+
+def _chave_secreta():
+    """
+    FLASK_SECRET_KEY deve ser definida no Render. Na falta dela, deriva
+    uma chave estável do client_secret do Google, para que todos os
+    workers do gunicorn (e os reinícios) aceitem os mesmos cookies.
+    """
+    chave = os.getenv("FLASK_SECRET_KEY")
+    if chave:
+        return chave
+
+    try:
+        with open(google_login.caminho_credenciais(), "rb") as arquivo:
+            return hashlib.sha256(b"motomar-session:" + arquivo.read()).hexdigest()
+    except FileNotFoundError:
+        return secrets.token_hex(32)
+
+
+app.secret_key = _chave_secreta()
+
+# Endereço público do sistema. No Render, RENDER_EXTERNAL_URL já vem
+# preenchida (ex.: https://rh-motomar.onrender.com).
+APP_BASE_URL = (
+    os.getenv("APP_BASE_URL")
+    or os.getenv("RENDER_EXTERNAL_URL")
+    or "http://127.0.0.1:2000"
+).rstrip("/")
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=APP_BASE_URL.startswith("https://"),
+    PERMANENT_SESSION_LIFETIME=timedelta(days=7),
+)
 
 logging.basicConfig(
     filename=os.path.join(BASE_DIR, "erro_motomar.log"),
@@ -85,14 +124,46 @@ def curriculo():
 # LOGIN COM GOOGLE
 # ============================================================
 
+# O endereço de retorno do Google é APP_BASE_URL + /oauth2callback e
+# precisa estar cadastrado exatamente assim no cliente OAuth (tipo Web).
+HOSTS_LOCAIS = ("127.0.0.1", "localhost", "[::1]")
+
+
 def _redirect_uri():
-    return url_for("oauth2callback", _external=True)
+    return f"{APP_BASE_URL}/oauth2callback"
+
+
+def _host_atual():
+    return request.host.rsplit(":", 1)[0] if not request.host.startswith("[") \
+        else request.host.split("]")[0] + "]"
 
 
 @app.route("/login-google")
 def login_google():
     destino = request.args.get("next", "/curriculo")
-    session["google_next"] = destino if destino.startswith("/") else "/curriculo"
+    destino = destino if destino.startswith("/") else "/curriculo"
+
+    base_atual = request.host_url.rstrip("/")
+
+    if base_atual != APP_BASE_URL:
+
+        # Mesmo computador, outro nome (ex.: localhost x 127.0.0.1):
+        # troca para o endereço oficial antes de começar, senão o
+        # cookie da sessão não volta junto com a resposta do Google.
+        if _host_atual() in HOSTS_LOCAIS:
+            return redirect(f"{APP_BASE_URL}/login-google?next={destino}")
+
+        # Endereço não cadastrado no Google: ele recusaria o retorno
+        # com o erro redirect_uri_mismatch.
+        return render_template(
+            "login_erro.html",
+            mensagem=(
+                f"O login com o Google não funciona pelo endereço {base_atual}. "
+                f"Acesse o sistema por {APP_BASE_URL}."
+            )
+        ), 400
+
+    session["google_next"] = destino
 
     return redirect(google_login.url_de_login(_redirect_uri()))
 

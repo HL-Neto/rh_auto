@@ -1,16 +1,16 @@
 """
 Login com Google por usuário (OAuth 2.0 para aplicação web).
 
-Cada navegador recebe um identificador na sessão do Flask e as
-credenciais do Google ficam guardadas apenas na memória do servidor,
-associadas a esse identificador. Ao reiniciar o servidor, todos
-precisam entrar novamente.
+Os tokens do usuário ficam no cookie de sessão do Flask (assinado com
+FLASK_SECRET_KEY e marcado como HttpOnly). Assim o login funciona com
+vários workers do gunicorn e sobrevive a reinícios do servidor no Render.
+O client_secret nunca vai para o cookie: ele é lido do arquivo de
+credenciais a cada uso.
 """
 
 import json
 import os
-import secrets
-import threading
+from datetime import datetime
 
 from flask import session
 from google.auth.transport.requests import Request
@@ -19,13 +19,12 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
 
-# O sistema roda localmente em http://127.0.0.1, sem HTTPS.
+# Atrás do proxy do Render a conexão interna é HTTP; localmente também.
 os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 # O Google pode devolver os escopos em outra ordem ou com "openid" extra.
 os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-CLIENT_SECRETS = os.path.join(BASE_DIR, "credentials.json")
 
 SCOPES = [
     "openid",
@@ -34,23 +33,39 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
 ]
 
-_credenciais = {}
-_lock = threading.Lock()
+
+def caminho_credenciais():
+    """
+    Ordem de busca do JSON do cliente OAuth:
+    1. GOOGLE_CLIENT_SECRETS (caminho definido no ambiente)
+    2. credentials.json na raiz do projeto
+    3. /etc/secrets/credentials.json (Secret File do Render)
+    """
+    candidatos = [
+        os.getenv("GOOGLE_CLIENT_SECRETS"),
+        os.path.join(BASE_DIR, "credentials.json"),
+        "/etc/secrets/credentials.json",
+    ]
+
+    for caminho in candidatos:
+        if caminho and os.path.exists(caminho):
+            return caminho
+
+    raise FileNotFoundError(
+        "Arquivo de credenciais do Google (credentials.json) não encontrado."
+    )
 
 
-def _id_sessao(criar=False):
-    sid = session.get("google_sid")
+def _cliente():
+    with open(caminho_credenciais(), encoding="utf-8") as arquivo:
+        dados = json.load(arquivo)
 
-    if not sid and criar:
-        sid = secrets.token_urlsafe(24)
-        session["google_sid"] = sid
-
-    return sid
+    return dados.get("web") or dados.get("installed") or {}
 
 
 def criar_flow(redirect_uri, state=None):
     return Flow.from_client_secrets_file(
-        CLIENT_SECRETS,
+        caminho_credenciais(),
         scopes=SCOPES,
         state=state,
         redirect_uri=redirect_uri,
@@ -73,6 +88,14 @@ def url_de_login(redirect_uri):
     return url
 
 
+def _guardar(creds):
+    session["google_token"] = {
+        "token": creds.token,
+        "refresh_token": creds.refresh_token or session.get("google_token", {}).get("refresh_token"),
+        "expiry": creds.expiry.isoformat() if creds.expiry else None,
+    }
+
+
 def concluir_login(redirect_uri, authorization_response):
     """Troca o código devolvido pelo Google por credenciais e identifica o usuário."""
     flow = criar_flow(redirect_uri, state=session.pop("google_state", None))
@@ -87,42 +110,46 @@ def concluir_login(redirect_uri, authorization_response):
     perfil = build("oauth2", "v2", credentials=creds, cache_discovery=False) \
         .userinfo().get().execute()
 
-    with _lock:
-        _credenciais[_id_sessao(criar=True)] = creds.to_json()
-
+    _guardar(creds)
     session["google_email"] = perfil.get("email", "")
     session["google_nome"] = perfil.get("name", "")
     session["google_foto"] = perfil.get("picture", "")
+    session.permanent = True
 
     return perfil
 
 
 def obter_credenciais():
-    sid = _id_sessao()
-    if not sid:
-        return None
-
-    with _lock:
-        dados = _credenciais.get(sid)
-
+    dados = session.get("google_token")
     if not dados:
         return None
 
-    creds = Credentials.from_authorized_user_info(json.loads(dados), SCOPES)
+    cliente = _cliente()
+
+    creds = Credentials(
+        token=dados.get("token"),
+        refresh_token=dados.get("refresh_token"),
+        token_uri=cliente.get("token_uri", "https://oauth2.googleapis.com/token"),
+        client_id=cliente.get("client_id"),
+        client_secret=cliente.get("client_secret"),
+        scopes=SCOPES,
+    )
+
+    if dados.get("expiry"):
+        # A biblioteca compara a validade com datetime sem fuso (UTC).
+        creds.expiry = datetime.fromisoformat(dados["expiry"]).replace(tzinfo=None)
 
     if creds.valid:
         return creds
 
-    if creds.expired and creds.refresh_token:
+    if creds.refresh_token:
         try:
             creds.refresh(Request())
         except Exception:
             sair()
             return None
 
-        with _lock:
-            _credenciais[sid] = creds.to_json()
-
+        _guardar(creds)
         return creds
 
     return None
@@ -149,12 +176,6 @@ def servico_gmail():
 
 
 def sair():
-    sid = _id_sessao()
-
-    if sid:
-        with _lock:
-            _credenciais.pop(sid, None)
-
-    for chave in ("google_sid", "google_email", "google_nome", "google_foto",
+    for chave in ("google_token", "google_email", "google_nome", "google_foto",
                   "google_state", "google_verifier"):
         session.pop(chave, None)
