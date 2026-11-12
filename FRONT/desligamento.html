@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 :root {
@@ -104,6 +105,17 @@ a,button{-webkit-tap-highlight-color:transparent}
 .page-head h1 span{color:var(--red)}
 .page-head p{color:var(--muted);font-size:13.5px;line-height:1.65;margin-top:9px;max-width:560px}
 .status-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:9px 14px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.export-button{
+    display:inline-flex;align-items:center;gap:8px;background:var(--red);
+    border:none;color:#fff;padding:10px 16px;border-radius:999px;
+    font-size:12px;font-weight:700;white-space:nowrap;transition:background .2s
+}
+.export-button:hover{background:var(--red-deep)}
+.export-button i{width:15px;height:15px}
+.export-button:disabled{opacity:.6;cursor:progress}
+.export-button.secondary{background:var(--panel);border:1px solid var(--line-2);color:var(--ink)}
+.export-button.secondary:hover{background:var(--panel-2);border-color:var(--faint)}
 .status-chip .dot,.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(47,211,119,.6)}
 
 .livery{
@@ -432,6 +444,17 @@ a,button{-webkit-tap-highlight-color:transparent}
 .rescisao-tab.ativo{background:var(--red-soft);border-color:rgba(232,16,46,.45);color:white}
 .rescisao-tab .tab-count{background:var(--panel-2);border-radius:20px;padding:3px 9px;font-size:10.5px;font-weight:800;color:var(--muted)}
 .rescisao-tab.ativo .tab-count{background:var(--red);color:white}
+.rescisao-select{
+    appearance:none;-webkit-appearance:none;padding:10px 34px 10px 16px;
+    border-radius:999px;border:1px solid var(--line-2);background:var(--field);
+    color:var(--muted);font-size:12.5px;font-weight:700;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239a9aa4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;
+    transition:color .2s,border-color .2s,background-color .2s
+}
+.rescisao-select:hover{color:white;border-color:var(--faint)}
+.rescisao-select.ativo{background-color:var(--red-soft);border-color:rgba(232,16,46,.45);color:white}
+.rescisao-select option{background:var(--panel);color:var(--ink)}
 .rescisoes-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .rescisao-stat{background:var(--field);border:1px solid var(--line-2);border-radius:10px;padding:15px;min-width:0}
 .rescisao-stat-label{color:var(--faint);font-size:11px;font-weight:700;margin-bottom:7px}
@@ -585,6 +608,76 @@ tbody tr:last-child td{border-bottom:0}
 @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* EXPORTAÇÃO PARA PDF (IMPRESSÃO) */
+
+/* O relatório é montado fora da tela e só aparece na impressão. */
+#printReport{position:absolute;left:-100000px;top:0}
+.rp-doc{width:186mm;background:#fff;color:#18181b;font-family:"Archivo",sans-serif;font-size:11px;text-align:left}
+.rp-doc *{box-sizing:border-box}
+.rp-doc table{min-width:0}
+.rp-doc th,.rp-doc td{position:static;font-size:inherit;letter-spacing:normal}
+#printSandbox{position:absolute;left:-100000px;top:0}
+
+.rp-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:12px}
+.rp-brand{color:#e8102e;font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.rp-head h1{font-size:24px;font-weight:800;text-transform:uppercase;line-height:1.05;color:#18181b}
+.rp-head p{color:#5f5f6a;font-size:10px;margin-top:5px}
+.rp-ref{text-align:right;color:#5f5f6a;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.rp-ref strong{display:block;color:#18181b;font-size:17px;letter-spacing:0;margin-top:3px}
+.rp-bar{height:4px;margin-bottom:18px;background:linear-gradient(104deg,#e8102e 0 70%,transparent 70% 72%,#e8102e 72% 76%,transparent 76% 78%,#18181b 78% 82%,transparent 82%)}
+
+.rp-section{margin-bottom:10px}
+.rp-section h2{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;color:#18181b}
+.rp-section h2 span{color:#e8102e}
+.rp-break{break-before:page}
+.rp-period{color:#5f5f6a;font-size:10px;margin:-4px 0 10px}
+
+.rp-row{display:flex;gap:10px;margin-bottom:10px;break-inside:avoid}
+.rp-row > .rp-card{flex:1 1 0;min-width:0}
+.rp-card{border:1px solid #e4e4e9;border-radius:8px;padding:10px 12px;break-inside:avoid;margin:0}
+.rp-card figcaption{margin-bottom:6px}
+.rp-card figcaption strong{display:block;font-size:11px;font-weight:800;color:#18181b}
+.rp-card figcaption span{color:#7a7a85;font-size:9px}
+.rp-card img{display:block;max-width:100%;height:auto;margin:0 auto}
+.rp-empty{color:#8a8a96;font-style:italic;font-size:10px;padding:24px 0;text-align:center}
+.rp-media{display:flex;justify-content:space-between;border-top:1px solid #ececf0;margin-top:6px;padding-top:5px;color:#5f5f6a;font-size:9.5px}
+.rp-media strong{color:#18181b;font-size:12px}
+
+.rp-donut{display:flex;align-items:center;gap:10px}
+.rp-donut img{flex-shrink:0;margin:0}
+.rp-legend{flex:1;border-collapse:collapse;font-size:9px;min-width:0}
+.rp-legend td{padding:3px 4px;border-bottom:1px solid #f0f0f3;color:#3a3a42;vertical-align:middle}
+.rp-legend tr:last-child td{border-bottom:0}
+.rp-legend td.num{text-align:right;white-space:nowrap;font-weight:700;color:#18181b}
+.rp-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+.rp-stats{display:flex;gap:10px;margin-bottom:12px}
+.rp-stat{flex:1 1 0;border:1px solid #e4e4e9;border-left:3px solid #e8102e;border-radius:6px;padding:9px 12px}
+.rp-stat span{display:block;color:#7a7a85;font-size:8.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.rp-stat strong{font-size:16px;font-weight:800;color:#18181b}
+
+.rp-table{width:100%;border-collapse:collapse;font-size:9.5px}
+.rp-doc .rp-table th{background:#18181b;color:#fff;text-align:left;font-size:8.5px;font-weight:700;letter-spacing:.06em;padding:7px 8px;border:0}
+.rp-doc .rp-table th.num{text-align:right}
+.rp-table td{padding:6px 8px;border-bottom:1px solid #ececf0;color:#3a3a42;vertical-align:top}
+.rp-table tbody tr:nth-child(even) td{background:#f7f7f9}
+.rp-table tr{break-inside:avoid}
+.rp-table .num{text-align:right;white-space:nowrap}
+.rp-table td strong{color:#18181b}
+.rp-table td small{display:block;color:#8a8a96;font-size:8.5px;margin-top:2px}
+.rp-table tfoot td{border-top:2px solid #18181b;border-bottom:0;font-weight:800;color:#18181b;background:#fff}
+
+.rp-footer{margin-top:16px;padding-top:8px;border-top:1px solid #e4e4e9;color:#8a8a96;font-size:8.5px;display:flex;justify-content:space-between}
+
+@media print{
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{size:A4;margin:12mm}
+    html,body{background:#fff!important}
+    .app,.modal-overlay,#printSandbox{display:none!important}
+    #printReport{position:static;left:auto}
+    #printReport .rp-doc{width:auto}
+}
 </style>
 </head>
 
@@ -603,7 +696,7 @@ tbody tr:last-child td{border-bottom:0}
             <span class="menu-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>
             </span>
-            Gestão de vendedores
+            Bônus
         </a>
 
         <a href="/cadastro">
@@ -642,9 +735,21 @@ tbody tr:last-child td{border-bottom:0}
         <p class="subtitle">Acompanhe contratações, desligamentos e opiniões dos colaboradores.</p>
     </div>
 
-    <div class="status-chip">
-        <span class="dot"></span>
-        RH Motomar
+    <div class="head-actions">
+        <button type="button" class="export-button secondary" id="printReportButton">
+            <i data-lucide="printer"></i>
+            <span>Imprimir</span>
+        </button>
+
+        <button type="button" class="export-button" id="exportPdf">
+            <i data-lucide="download"></i>
+            <span>Exportar PDF</span>
+        </button>
+
+        <div class="status-chip">
+            <span class="dot"></span>
+            RH Motomar
+        </div>
     </div>
 </header>
 
@@ -676,12 +781,12 @@ tbody tr:last-child td{border-bottom:0}
             <span class="kpi-icon green"><i data-lucide="calendar-days"></i></span>
         </div>
         <div class="kpi-value" id="kpiMes">0</div>
-        <div class="kpi-description">Desligamentos registrados no mês atual</div>
+        <div class="kpi-description" id="kpiMesDescricao">Desligamentos registrados no mês anterior</div>
     </div>
 
     <div class="kpi">
         <div class="kpi-top">
-            <span class="kpi-label">Turnover do mês</span>
+            <span class="kpi-label">Turnover do mês anterior</span>
             <span class="kpi-icon"><i data-lucide="activity"></i></span>
         </div>
         <div class="kpi-value" id="kpiTurnover">—</div>
@@ -761,7 +866,7 @@ tbody tr:last-child td{border-bottom:0}
         <div>
             <div class="panel-title">Rescisões calculadas</div>
             <div class="panel-description">
-                Rescisões oficiais importadas da folha de pagamento. Alterne entre o mês atual, o ano atual e todo o período.
+                Rescisões oficiais importadas da folha de pagamento. Por padrão são exibidos os dados do mês anterior; alterne entre mês atual, ano, período geral ou escolha um mês específico.
             </div>
         </div>
     </div>
@@ -770,12 +875,15 @@ tbody tr:last-child td{border-bottom:0}
         <button type="button" class="rescisao-tab" data-aba="mes">
             No mês <span class="tab-count" id="rescisoesCountMes">0</span>
         </button>
-        <button type="button" class="rescisao-tab ativo" data-aba="ano">
+        <button type="button" class="rescisao-tab" data-aba="ano">
             No ano <span class="tab-count" id="rescisoesCountAno">0</span>
         </button>
         <button type="button" class="rescisao-tab" data-aba="geral">
             Geral <span class="tab-count" id="rescisoesCountGeral">0</span>
         </button>
+        <select id="rescisoesMesFiltro" class="rescisao-select" aria-label="Filtrar rescisões por um mês específico">
+            <option value="">Escolher mês...</option>
+        </select>
     </div>
 
     <div class="rescisoes-stats">
@@ -999,6 +1107,9 @@ tbody tr:last-child td{border-bottom:0}
 
 </main>
 </div>
+
+<div id="printReport" aria-hidden="true"></div>
+<div id="printSandbox" aria-hidden="true"></div>
 
 <div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true">
 
@@ -1807,15 +1918,21 @@ function atualizarDashboard() {
     const historico = obterHistoricoTurnover();
     const atual = historico[historico.length - 1];
 
-    document.getElementById("kpiMes").textContent = atual.saidas;
+    /* O card usa sempre o mês anterior (fechado), não o mês corrente. */
+    const mesAnterior = historico[historico.length - 2] ?? atual;
 
-    if (atual.turnover !== null) {
+    document.getElementById("kpiMes").textContent = mesAnterior.saidas;
+
+    document.getElementById("kpiMesDescricao").textContent =
+        `Desligamentos registrados em ${meses[mesAnterior.mes]}/${mesAnterior.ano}`;
+
+    if (mesAnterior.turnover !== null) {
 
         document.getElementById("kpiTurnover").textContent =
-            `${atual.turnover.toFixed(2)}%`;
+            `${mesAnterior.turnover.toFixed(2)}%`;
 
         document.getElementById("kpiTurnoverDescricao").textContent =
-            `Quadro médio: ${atual.quadroMedio.toFixed(1)} funcionários`;
+            `${meses[mesAnterior.mes]}/${mesAnterior.ano} · Quadro médio: ${mesAnterior.quadroMedio.toFixed(1)} funcionários`;
 
     } else {
 
@@ -1869,6 +1986,19 @@ function atualizarDashboard() {
 ========================================================= */
 
 let abaRescisoes = "ano";
+let rescisoesAtuais = [];
+
+/* Mês específico selecionado no formato "ano-mes" (mes de 0 a 11).
+   Quando preenchido, tem prioridade sobre as abas. Por padrão a seção
+   abre mostrando os dados do mês anterior. */
+let mesRescisoes = "";
+let mesRescisoesInicializado = false;
+
+function chaveMesAnterior() {
+    const hoje = new Date();
+    const anterior = new Date(hoje.getFullYear(),hoje.getMonth() - 1,1);
+    return `${anterior.getFullYear()}-${anterior.getMonth()}`;
+}
 
 function formatarMoeda(valor) {
     return (Number(valor) || 0).toLocaleString("pt-BR", {
@@ -1877,7 +2007,19 @@ function formatarMoeda(valor) {
     });
 }
 
-function filtrarRescisoes(registros,aba) {
+function filtrarRescisoes(registros,aba,mesEspecifico) {
+
+    if (mesEspecifico) {
+
+        const [ano,mes] = mesEspecifico.split("-").map(Number);
+
+        return registros.filter(item => {
+            const data = obterTimestamp(item.data_desligamento);
+            return data &&
+                data.getUTCFullYear() === ano &&
+                data.getUTCMonth() === mes;
+        });
+    }
 
     if (aba === "geral") return registros;
 
@@ -1895,12 +2037,48 @@ function filtrarRescisoes(registros,aba) {
     });
 }
 
+function popularFiltroMeses(registros) {
+
+    const select = document.getElementById("rescisoesMesFiltro");
+    if (!select) return;
+
+    const chaves = new Set([chaveMesAnterior()]);
+
+    registros.forEach(item => {
+        const data = obterTimestamp(item.data_desligamento);
+        if (data) chaves.add(`${data.getUTCFullYear()}-${data.getUTCMonth()}`);
+    });
+
+    const ordenadas = Array.from(chaves).sort((a,b) => {
+        const [anoA,mesA] = a.split("-").map(Number);
+        const [anoB,mesB] = b.split("-").map(Number);
+        return (anoB * 12 + mesB) - (anoA * 12 + mesA);
+    });
+
+    select.innerHTML =
+        `<option value="">Escolher mês...</option>` +
+        ordenadas.map(chave => {
+            const [ano,mes] = chave.split("-").map(Number);
+            return `<option value="${chave}">${meses[mes]}/${ano}</option>`;
+        }).join("");
+
+    select.value = mesRescisoes;
+    select.classList.toggle("ativo",Boolean(mesRescisoes));
+}
+
 function renderRescisoes() {
 
     const tbody = document.getElementById("rescisoesTable");
     if (!tbody) return;
 
     const todas = desligamentos.filter(item => item.rescisao === true);
+
+    if (!mesRescisoesInicializado) {
+        mesRescisoes = chaveMesAnterior();
+        mesRescisoesInicializado = true;
+    }
+
+    popularFiltroMeses(todas);
 
     document.getElementById("rescisoesCountMes").textContent =
         filtrarRescisoes(todas,"mes").length;
@@ -1911,7 +2089,14 @@ function renderRescisoes() {
     document.getElementById("rescisoesCountGeral").textContent =
         todas.length;
 
-    const atual = filtrarRescisoes(todas,abaRescisoes)
+    document.querySelectorAll("#rescisoesTabs .rescisao-tab").forEach(tab => {
+        tab.classList.toggle(
+            "ativo",
+            !mesRescisoes && tab.dataset.aba === abaRescisoes
+        );
+    });
+
+    const atual = filtrarRescisoes(todas,abaRescisoes,mesRescisoes)
         .slice()
         .sort((a,b) => {
             const da = obterTimestamp(a.data_desligamento);
@@ -1928,6 +2113,8 @@ function renderRescisoes() {
         (soma,item) => soma + (Number(item.fgts_rescisorio) || 0),
         0
     );
+
+    rescisoesAtuais = atual;
 
     document.getElementById("rescisoesQtd").textContent = atual.length;
     document.getElementById("rescisoesLiquido").textContent = formatarMoeda(totalLiquido);
@@ -1996,11 +2183,13 @@ document.getElementById("rescisoesTabs").addEventListener("click",event => {
     if (!botao) return;
 
     abaRescisoes = botao.dataset.aba;
+    mesRescisoes = "";
 
-    document.querySelectorAll("#rescisoesTabs .rescisao-tab").forEach(tab => {
-        tab.classList.toggle("ativo",tab === botao);
-    });
+    renderRescisoes();
+});
 
+document.getElementById("rescisoesMesFiltro").addEventListener("change",event => {
+    mesRescisoes = event.target.value;
     renderRescisoes();
 });
 
@@ -2321,6 +2510,14 @@ function criarGraficoPizza(canvasId,dados,titulo) {
 ========================================================= */
 
 function renderGraficoAssedio() {
+    criarGraficoPizza(
+        "chartAssedio",
+        dadosAssedio(),
+        "Respostas sobre situações de assédio"
+    );
+}
+
+function dadosAssedio() {
 
     const dados = agruparRespostas(
         desligamentos,
@@ -2329,11 +2526,26 @@ function renderGraficoAssedio() {
         !["","nao informado","n/a"].includes(normalizarTexto(item.label))
     );
 
-    criarGraficoPizza(
-        "chartAssedio",
-        dados,
-        "Respostas sobre situações de assédio"
-    );
+    /* Todas as variações afirmativas ("Sim", "Sim, presenciei", etc.)
+       são somadas em uma única categoria "Sim". */
+    let totalSim = 0;
+
+    const restantes = dados.filter(item => {
+
+        if (/^sim\b/.test(normalizarTexto(item.label))) {
+            totalSim += Number(item.total) || 0;
+            return false;
+        }
+
+        return true;
+
+    });
+
+    if (totalSim > 0) {
+        restantes.push({label:"Sim",total:totalSim});
+    }
+
+    return restantes.sort((a,b) => b.total - a.total);
 
 }
 
@@ -2344,17 +2556,28 @@ function renderGraficoAssedio() {
 function ajustarMotivos(dados) {
 
     /*
-     * Regra de negócio: respostas "outros" no motivo de saída
-     * passam a ser contabilizadas como "Salário".
+     * Regras de negócio:
+     * - "Salário/Benefício" e "Melhor proposta" são exibidos
+     *   como uma única categoria.
+     * - Respostas "outros" também entram nessa categoria.
      */
-    let totalOutros = 0;
+    const rotuloCombinado = "Salário / Benefício / Melhor proposta";
+    let totalCombinado = 0;
 
     const restantes = dados.filter(item => {
 
         const rotulo = normalizarTexto(item.label);
 
-        if (rotulo === "outros" || rotulo === "outro") {
-            totalOutros += Number(item.total) || 0;
+        const combinar =
+            rotulo === "outros" ||
+            rotulo === "outro" ||
+            rotulo.includes("salario") ||
+            rotulo.includes("beneficio") ||
+            rotulo.includes("melhor proposta") ||
+            rotulo.includes("proposta melhor");
+
+        if (combinar) {
+            totalCombinado += Number(item.total) || 0;
             return false;
         }
 
@@ -2362,18 +2585,8 @@ function ajustarMotivos(dados) {
 
     });
 
-    if (totalOutros > 0) {
-
-        const salario = restantes.find(item =>
-            normalizarTexto(item.label).includes("salario")
-        );
-
-        if (salario) {
-            salario.total += totalOutros;
-        } else {
-            restantes.push({label:"Salário",total:totalOutros});
-        }
-
+    if (totalCombinado > 0) {
+        restantes.push({label:rotuloCombinado,total:totalCombinado});
     }
 
     return restantes.sort((a,b) => b.total - a.total);
@@ -2381,6 +2594,13 @@ function ajustarMotivos(dados) {
 
 
 function renderExitCharts() {
+    const dados = dadosSaidas();
+    criarGraficoPizza("chartSaidasCargo",dados.cargo,"Saídas por cargo");
+    criarGraficoPizza("chartTiposDesligamento",dados.tipo,"Tipos de desligamento");
+    criarGraficoPizza("chartMotivosSaida",dados.motivo,"Motivos de saída");
+}
+
+function dadosSaidas() {
 
     const dadosCargo = agruparRespostas(
         desligamentos,
@@ -2415,17 +2635,18 @@ function renderExitCharts() {
         ]
     );
 
-    criarGraficoPizza("chartSaidasCargo",dadosCargo,"Saídas por cargo");
-    criarGraficoPizza("chartTiposDesligamento",dadosTipo,"Tipos de desligamento");
-    criarGraficoPizza("chartMotivosSaida",ajustarMotivos(dadosMotivo),"Motivos de saída");
-
+    return {
+        cargo:dadosCargo,
+        tipo:dadosTipo,
+        motivo:ajustarMotivos(dadosMotivo)
+    };
 }
 
 /* =========================================================
    GRÁFICOS DE HISTÓRICO
 ========================================================= */
 
-function renderCharts() {
+function serieMensal() {
 
     const labels = [];
     const saidas = [];
@@ -2469,6 +2690,13 @@ function renderCharts() {
         );
 
     }
+
+    return {labels,saidas,entradas};
+}
+
+function renderCharts() {
+
+    const {labels,saidas,entradas} = serieMensal();
 
     const options = {
         responsive:true,
@@ -2968,6 +3196,398 @@ document.getElementById("clearSearch").addEventListener(
         renderEmployees(todosRegistros);
     }
 );
+
+/* =========================================================
+   RELATÓRIO EM PDF
+   Monta um layout próprio (fundo claro) com os gráficos
+   redesenhados em cores de impressão e a tabela de rescisões.
+   A gravação usa o diálogo de impressão ("Salvar como PDF").
+========================================================= */
+
+const RP = {ink:"#18181b",muted:"#5f5f6a",grid:"#ececf0",red:"#e8102e",gray:"#9a9aa4"};
+
+const CORES_RELATORIO = [
+    "#e8102e","#2b2b33","#f59aa4","#8a8a96",
+    "#a50d22","#c4c4cc","#55555f","#f7c9ce"
+];
+
+function graficoParaImagem(config,largura,altura) {
+
+    const canvas = document.createElement("canvas");
+    canvas.width = largura;
+    canvas.height = altura;
+    canvas.style.width = `${largura}px`;
+    canvas.style.height = `${altura}px`;
+    document.getElementById("printSandbox").appendChild(canvas);
+
+    config.options = {
+        responsive:false,
+        animation:false,
+        devicePixelRatio:2,
+        ...config.options
+    };
+
+    const chart = new Chart(canvas,config);
+    const url = chart.toBase64Image("image/png",1);
+
+    chart.destroy();
+    canvas.remove();
+
+    return `<img src="${url}" alt="" style="width:${largura}px">`;
+}
+
+function escalasRelatorio(extraY = {}) {
+    return {
+        x:{grid:{display:false},ticks:{color:RP.muted,font:{size:9}}},
+        y:{
+            beginAtZero:true,
+            grid:{color:RP.grid},
+            ticks:{color:RP.muted,font:{size:9},precision:0,...extraY}
+        }
+    };
+}
+
+const SEM_DADOS = `<div class="rp-empty">Sem dados para este indicador.</div>`;
+
+function imagemBarras(dados,cor,largura,altura) {
+
+    if (!dados.valores.some(v => v)) return SEM_DADOS;
+
+    const escalas = escalasRelatorio();
+
+    return graficoParaImagem({
+        type:"bar",
+        data:{labels:dados.labels,datasets:[{data:dados.valores,backgroundColor:cor,borderRadius:3,maxBarThickness:22}]},
+        options:{plugins:{legend:{display:false}},scales:escalas}
+    },largura,altura);
+}
+
+function imagemTurnover(largura,altura) {
+
+    const historico = obterHistoricoTurnover();
+    if (!historico.some(item => item.turnover !== null)) return SEM_DADOS;
+
+    const dados = {
+        labels:historico.map(item => `${meses[item.mes]}/${String(item.ano).slice(-2)}`),
+        valores:historico.map(item => item.turnover === null ? null : Number(item.turnover.toFixed(2)))
+    };
+
+    return graficoParaImagem({
+        type:"line",
+        data:{labels:dados.labels,datasets:[{
+            data:dados.valores,
+            borderColor:RP.red,
+            backgroundColor:"rgba(232,16,46,.10)",
+            borderWidth:2,
+            fill:true,
+            tension:.35,
+            pointRadius:3,
+            pointBackgroundColor:RP.red
+        }]},
+        options:{
+            plugins:{legend:{display:false}},
+            scales:escalasRelatorio({precision:undefined,callback:v => `${v}%`})
+        }
+    },largura,altura);
+}
+
+function blocoDonut(lista,tamanho = 150) {
+
+    const agrupados = agruparExcedentes(lista || [],CORES_RELATORIO.length);
+    const dados = {
+        labels:agrupados.map(item => item.label),
+        valores:agrupados.map(item => Number(item.total) || 0)
+    };
+    const total = dados.valores.reduce((s,v) => s + v,0);
+
+    if (!total) return SEM_DADOS;
+
+    const cores = dados.valores.map((_,i) => CORES_RELATORIO[i % CORES_RELATORIO.length]);
+
+    const imagem = graficoParaImagem({
+        type:"doughnut",
+        data:{labels:dados.labels,datasets:[{data:dados.valores,backgroundColor:cores,borderColor:"#fff",borderWidth:2}]},
+        options:{cutout:"60%",plugins:{legend:{display:false},tooltip:{enabled:false}}},
+        plugins:[{
+            id:"rpCentro",
+            afterDatasetsDraw(chart) {
+                const meta = chart.getDatasetMeta(0);
+                if (!meta.data.length) return;
+                const {x,y} = meta.data[0];
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = RP.ink;
+                ctx.font = "800 20px Archivo, sans-serif";
+                ctx.fillText(String(total),x,y - 6);
+                ctx.fillStyle = RP.muted;
+                ctx.font = "600 9px Archivo, sans-serif";
+                ctx.fillText(total === 1 ? "resposta" : "respostas",x,y + 11);
+                ctx.restore();
+            }
+        }]
+    },tamanho,tamanho);
+
+    const linhas = dados.labels.map((label,i) => `
+        <tr>
+            <td><span class="rp-dot" style="background:${cores[i]}"></span>${escapeHtml(label)}</td>
+            <td class="num">${dados.valores[i]}</td>
+            <td class="num">${(dados.valores[i] / total * 100).toFixed(1).replace(".",",")}%</td>
+        </tr>
+    `).join("");
+
+    return `<div class="rp-donut">${imagem}<table class="rp-legend">${linhas}</table></div>`;
+}
+
+function cartaoRelatorio(titulo,descricao,conteudo,largo = false) {
+    return {
+        largo,
+        html:`
+            <figure class="rp-card">
+                <figcaption><strong>${escapeHtml(titulo)}</strong><span>${escapeHtml(descricao)}</span></figcaption>
+                ${conteudo}
+            </figure>
+        `
+    };
+}
+
+/* Cartões largos ocupam uma linha inteira; os demais vão em pares.
+   Linhas em bloco permitem que a quebra de página nunca corte um cartão. */
+function linhasRelatorio(cartoes) {
+
+    const linhas = [];
+    let par = [];
+
+    cartoes.forEach(cartao => {
+        if (cartao.largo) {
+            if (par.length) { linhas.push(par); par = []; }
+            linhas.push([cartao]);
+            return;
+        }
+        par.push(cartao);
+        if (par.length === 2) { linhas.push(par); par = []; }
+    });
+
+    if (par.length) linhas.push(par);
+
+    return linhas.map(linha => `
+        <div class="rp-row">
+            ${linha.map(c => c.html).join("")}
+            ${linha.length === 1 && !linha[0].largo ? `<div style="flex:1 1 0"></div>` : ""}
+        </div>
+    `).join("");
+}
+
+function rotuloPeriodoRescisoes() {
+
+    const hoje = new Date();
+
+    if (mesRescisoes) {
+        const [ano,mes] = mesRescisoes.split("-").map(Number);
+        return `${meses[mes]}/${ano}`;
+    }
+
+    if (abaRescisoes === "mes") return `Mês atual (${meses[hoje.getMonth()]}/${hoje.getFullYear()})`;
+    if (abaRescisoes === "ano") return `Ano de ${hoje.getFullYear()}`;
+    return "Todo o período";
+}
+
+function secaoRescisoesRelatorio() {
+
+    const lista = rescisoesAtuais;
+    const liquido = lista.reduce((s,i) => s + (Number(i.valor_liquido) || 0),0);
+    const fgts = lista.reduce((s,i) => s + (Number(i.fgts_rescisorio) || 0),0);
+
+    const linhas = lista.length
+        ? lista.map(item => `
+            <tr>
+                <td><strong>${escapeHtml(obterNome(item))}</strong></td>
+                <td>${escapeHtml(obterValor(item,["empresa"],"—"))}<small>${escapeHtml(obterValor(item,["departamento_oficial","departamento"],""))}</small></td>
+                <td>${escapeHtml(formatarData(item.data_admissao))}</td>
+                <td>${escapeHtml(formatarData(item.data_desligamento))}</td>
+                <td>${escapeHtml(obterValor(item,["motivo_rescisao"],"—"))}</td>
+                <td class="num">${escapeHtml(formatarMoeda(item.fgts_rescisorio))}</td>
+                <td class="num"><strong>${escapeHtml(formatarMoeda(item.valor_liquido))}</strong></td>
+            </tr>
+        `).join("")
+        : `<tr><td colspan="7" class="rp-empty">Nenhuma rescisão registrada neste período.</td></tr>`;
+
+    return `
+        <section class="rp-section rp-break">
+            <h2><span>02</span> Rescisões calculadas</h2>
+            <p class="rp-period">Período: <strong>${escapeHtml(rotuloPeriodoRescisoes())}</strong> · fonte: folha de pagamento</p>
+
+            <div class="rp-stats">
+                <div class="rp-stat"><span>Rescisões</span><strong>${lista.length}</strong></div>
+                <div class="rp-stat"><span>Total líquido pago</span><strong>${formatarMoeda(liquido)}</strong></div>
+                <div class="rp-stat"><span>FGTS rescisório</span><strong>${formatarMoeda(fgts)}</strong></div>
+            </div>
+
+            <table class="rp-table">
+                <thead>
+                    <tr>
+                        <th>COLABORADOR</th><th>EMPRESA / DEPTO</th><th>ADMISSÃO</th>
+                        <th>DEMISSÃO</th><th>MOTIVO</th><th class="num">FGTS</th><th class="num">LÍQUIDO</th>
+                    </tr>
+                </thead>
+                <tbody>${linhas}</tbody>
+                ${lista.length ? `
+                <tfoot>
+                    <tr>
+                        <td colspan="5">Total (${lista.length} ${lista.length === 1 ? "rescisão" : "rescisões"})</td>
+                        <td class="num">${formatarMoeda(fgts)}</td>
+                        <td class="num">${formatarMoeda(liquido)}</td>
+                    </tr>
+                </tfoot>` : ""}
+            </table>
+        </section>
+    `;
+}
+
+function montarRelatorioHtml() {
+
+    const agora = new Date();
+    const [anoRef,mesRef] = chaveMesAnterior().split("-").map(Number);
+
+    const serie = serieMensal();
+    const saidas = dadosSaidas();
+
+    const comparacao = [
+        {label:"Desligamentos",total:desligamentos.length},
+        {label:"Contratações",total:contratacoes.length}
+    ];
+
+    const avaliacoes = camposAvaliacoes.map(config => {
+
+        const resultado = calcularDistribuicaoNotas(desligamentos,config.keys);
+        const media = resultado.media !== null
+            ? resultado.media.toFixed(2).replace(".",",")
+            : "—";
+
+        return cartaoRelatorio(
+            config.titulo,
+            `Distribuição das notas de 1 a 5 · ${resultado.total} ${resultado.total === 1 ? "resposta" : "respostas"}`,
+            imagemBarras(
+                {labels:["1","2","3","4","5"],valores:[1,2,3,4,5].map(n => resultado.distribuicao[n])},
+                RP.red,320,140
+            ) +
+            `<div class="rp-media"><span>Média das avaliações</span><strong>${media}</strong></div>`
+        );
+
+    });
+
+    return `
+        <header class="rp-head">
+            <div>
+                <div class="rp-brand">Motomar · Recursos Humanos</div>
+                <h1>Relatório de turnover</h1>
+                <p>Gerado em ${agora.toLocaleDateString("pt-BR")} às ${agora.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</p>
+            </div>
+            <div class="rp-ref">Mês de referência<strong>${meses[mesRef]}/${anoRef}</strong></div>
+        </header>
+        <div class="rp-bar"></div>
+
+        <section class="rp-section">
+            <h2><span>01</span> Indicadores</h2>
+            ${linhasRelatorio([
+                cartaoRelatorio("Evolução do turnover","Taxa mensal de rotatividade · últimos 12 meses",imagemTurnover(680,170),true),
+                cartaoRelatorio("Histórico de desligamentos","Quantidade por mês",imagemBarras({labels:serie.labels,valores:serie.saidas},RP.red,320,150)),
+                cartaoRelatorio("Histórico de contratações","Quantidade de admissões por mês",imagemBarras({labels:serie.labels,valores:serie.entradas},"#3a3a42",320,150)),
+                cartaoRelatorio("Movimentações registradas","Desligamentos x contratações",blocoDonut(comparacao,130)),
+                cartaoRelatorio("Tipos de desligamento","Distribuição dos tipos registrados",blocoDonut(saidas.tipo,130)),
+                cartaoRelatorio("Saídas por cargo","Desligamentos agrupados por cargo",blocoDonut(saidas.cargo,150),true),
+                cartaoRelatorio("Motivos de saída","Motivos informados pelos colaboradores",blocoDonut(saidas.motivo,130)),
+                cartaoRelatorio("Relatos de assédio","Respostas registradas na entrevista (não representam investigação)",blocoDonut(dadosAssedio(),130)),
+                ...avaliacoes
+            ])}
+        </section>
+
+        ${secaoRescisoesRelatorio()}
+
+        <footer class="rp-footer">
+            <span>Motomar · Sistema interno de RH</span>
+            <span>Documento confidencial — uso interno</span>
+        </footer>
+    `;
+}
+
+function definirCarregando(botao,carregando,texto) {
+    botao.disabled = carregando;
+    botao.querySelector("span").textContent = texto;
+}
+
+async function imprimirRelatorio() {
+
+    const relatorio = document.getElementById("printReport");
+    relatorio.innerHTML = `<div class="rp-doc">${montarRelatorioHtml()}</div>`;
+
+    await Promise.all(
+        Array.from(relatorio.querySelectorAll("img")).map(img => img.decode().catch(() => {}))
+    );
+
+    window.print();
+}
+
+async function baixarRelatorioPdf() {
+
+    const botao = document.getElementById("exportPdf");
+
+    if (typeof html2pdf !== "function") {
+        alert("Não foi possível carregar o gerador de PDF. Verifique a conexão e tente novamente.");
+        return;
+    }
+
+    definirCarregando(botao,true,"Gerando PDF...");
+
+    try {
+
+        /* O documento precisa estar no DOM com as imagens já carregadas,
+           senão a altura é medida errada e o PDF sai cortado. */
+        const documento = document.createElement("div");
+        documento.className = "rp-doc";
+        documento.style.width = "100%";
+        documento.innerHTML = montarRelatorioHtml();
+        document.getElementById("printSandbox").appendChild(documento);
+
+        await Promise.all(
+            Array.from(documento.querySelectorAll("img")).map(img => img.decode().catch(() => {}))
+        );
+
+        const [ano,mes] = chaveMesAnterior().split("-").map(Number);
+
+        try {
+            await html2pdf()
+                .set({
+                    margin:[10,12,10,12],
+                    filename:`relatorio-turnover-${ano}-${String(mes + 1).padStart(2,"0")}.pdf`,
+                    image:{type:"jpeg",quality:.97},
+                    html2canvas:{scale:2,backgroundColor:"#ffffff",scrollX:0,scrollY:0,windowWidth:document.documentElement.clientWidth},
+                    jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+                    pagebreak:{mode:["css","legacy"],before:".rp-break",avoid:[".rp-row",".rp-stats",".rp-table tr",".rp-head"]}
+                })
+                .from(documento)
+                .save();
+        } finally {
+            documento.remove();
+        }
+
+    } catch(error) {
+
+        console.error("Erro ao gerar PDF:",error);
+        alert("Não foi possível gerar o PDF. Veja o console para mais detalhes.");
+
+    } finally {
+        definirCarregando(botao,false,"Exportar PDF");
+    }
+}
+
+window.addEventListener("afterprint",() => {
+    document.getElementById("printReport").innerHTML = "";
+});
+
+document.getElementById("printReportButton").addEventListener("click",imprimirRelatorio);
+document.getElementById("exportPdf").addEventListener("click",baixarRelatorioPdf);
 
 /* =========================================================
    INICIALIZAÇÃO

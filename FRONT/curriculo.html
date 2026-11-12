@@ -816,6 +816,104 @@
             color: var(--faint);
         }
 
+        .acoes-curriculo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn-baixar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 10px 14px;
+            background: transparent;
+            color: var(--ink, #f2f2f5);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+        }
+
+        .btn-baixar:hover:not(:disabled) {
+            border-color: var(--red);
+            background: rgba(232, 16, 46, .1);
+        }
+
+        .btn-baixar:disabled {
+            opacity: .6;
+            cursor: progress;
+        }
+
+        .user-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 100%;
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 999px;
+            padding: 6px 8px 6px 6px;
+        }
+
+        .user-chip img,
+        .user-chip-inicial {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-chip-inicial {
+            display: grid;
+            place-items: center;
+            background: var(--red);
+            color: #fff;
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .user-chip-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.3;
+        }
+
+        .user-chip-info strong {
+            font-size: 12.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-chip-info small {
+            color: var(--muted);
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-chip-sair {
+            flex-shrink: 0;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: var(--red);
+            color: #fff;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .user-chip-sair:hover {
+            background: var(--red-deep);
+        }
+
         /* HISTÓRICO */
 
         .results-card {
@@ -1231,7 +1329,7 @@
                 <span class="menu-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>
                 </span>
-                Gestão de vendedores
+                Bônus
             </a>
 
             <a href="/cadastro">
@@ -1276,7 +1374,7 @@
 
                 <div>
                     <div class="breadcrumb">
-                        <a href="/">Gestão de vendedores</a>
+                        <a href="/">Bônus</a>
                         <span>/</span>
                         Currículos
                     </div>
@@ -1289,9 +1387,17 @@
                     </p>
                 </div>
 
-                <div class="status-chip">
-                    <span class="dot"></span>
-                    Sistema de triagem
+                <div class="user-chip" title="Conta do Google usada para ler os e-mails">
+                    {% if usuario.foto %}
+                    <img src="{{ usuario.foto }}" alt="" referrerpolicy="no-referrer">
+                    {% else %}
+                    <span class="user-chip-inicial">{{ (usuario.email or "?")[0] | upper }}</span>
+                    {% endif %}
+                    <span class="user-chip-info">
+                        <strong>{{ usuario.nome or usuario.email }}</strong>
+                        <small>{{ usuario.email }}</small>
+                    </span>
+                    <a href="/logout-google" class="user-chip-sair">Trocar conta</a>
                 </div>
 
             </header>
@@ -1635,6 +1741,11 @@
                     }
                 );
 
+                if (response.status === 401) {
+                    window.location.href = "/login-google?next=/curriculo";
+                    return;
+                }
+
                 const data = await parseResponse(response);
 
                 await carregarCurriculos();
@@ -1812,7 +1923,18 @@
                         status.textContent = "Ainda não analisado";
                     }
 
-                    acaoCell.append(botao, status);
+                    const baixar = document.createElement("button");
+                    baixar.type = "button";
+                    baixar.className = "btn-baixar";
+                    baixar.textContent = "↓ Baixar PDF";
+                    baixar.dataset.curriculoId = curriculo.id;
+                    baixar.disabled = !curriculo.id;
+
+                    const acoes = document.createElement("div");
+                    acoes.className = "acoes-curriculo";
+                    acoes.append(botao, baixar);
+
+                    acaoCell.append(acoes, status);
                     row.append(remetenteCell, acaoCell);
 
                     fragment.appendChild(row);
@@ -1840,7 +1962,58 @@
             }
         }
 
+        async function baixarCurriculoPdf(curriculoId, botao) {
+            const textoOriginal = botao.textContent;
+            botao.disabled = true;
+            botao.textContent = "Baixando...";
+
+            try {
+                const response = await fetch(
+                    `/curriculo/${encodeURIComponent(curriculoId)}/pdf`
+                );
+
+                if (response.status === 401) {
+                    window.location.href = "/login-google?next=/curriculo";
+                    return;
+                }
+
+                if (!response.ok) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.message || `Erro HTTP ${response.status}`);
+                }
+
+                const disposicao = response.headers.get("Content-Disposition") || "";
+                const nomeCodificado = disposicao.match(/filename\*=UTF-8''([^;]+)/i);
+                const nomeSimples = disposicao.match(/filename="?([^";]+)"?/i);
+                const nome = nomeCodificado
+                    ? decodeURIComponent(nomeCodificado[1])
+                    : nomeSimples ? nomeSimples[1] : `curriculo_${curriculoId}.pdf`;
+
+                const url = URL.createObjectURL(await response.blob());
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = nome;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            } catch (error) {
+                showNotice(`Não foi possível baixar o PDF: ${error.message}`, "error");
+            } finally {
+                botao.disabled = false;
+                botao.textContent = textoOriginal;
+            }
+        }
+
         tbody.addEventListener("click", async function(event) {
+            const botaoBaixar = event.target.closest(".btn-baixar");
+
+            if (botaoBaixar && !botaoBaixar.disabled) {
+                await baixarCurriculoPdf(botaoBaixar.dataset.curriculoId, botaoBaixar);
+                return;
+            }
+
             const botao = event.target.closest(".btn-analisar");
 
             if (!botao || botao.disabled) return;

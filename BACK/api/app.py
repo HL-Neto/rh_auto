@@ -1,10 +1,13 @@
 
+import io
 import os
+import secrets
 import logging
 
-from flask                     import (Flask,request,render_template,send_file,jsonify)
+from flask                     import (Flask,request,render_template,send_file,jsonify,redirect,url_for,session)
 from BACK.modules.bonus_module import (add_user,pdfTurn,get_user,pdfRead,delet_pdfs)
-from BACK.modules.gmail_module import (gmail_inbox,attachment,get_curriculum,fb_send_curriculum,fb_get_curriculum)
+from BACK.modules.gmail_module import (gmail_inbox,attachment,get_curriculum,fb_send_curriculum,fb_get_curriculum,baixar_pdf_curriculo)
+from BACK.authentication       import google_login
 from BACK.llm.llm              import (bonus_llm_process,command_process,curriculo_llm_process)
 from BACK.modules.desligamento_module import get_desligamentos, get_contratacoes
 
@@ -15,6 +18,10 @@ app = Flask( __name__,template_folder=FRONT_DIR,
     static_folder=os.path.join(FRONT_DIR, "static"),
     static_url_path="/static"
 )
+
+# Sem FLASK_SECRET_KEY no .env, a chave muda a cada execução e todos
+# precisam entrar com o Google de novo após reiniciar o servidor.
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
 
 logging.basicConfig(
     filename=os.path.join(BASE_DIR, "erro_motomar.log"),
@@ -66,7 +73,67 @@ def cadastro():
 
 @app.route("/curriculo")
 def curriculo():
-    return render_template("curriculo.html")
+    usuario = google_login.usuario_logado()
+
+    if not usuario:
+        return redirect(url_for("login_google", next="/curriculo"))
+
+    return render_template("curriculo.html", usuario=usuario)
+
+
+# ============================================================
+# LOGIN COM GOOGLE
+# ============================================================
+
+def _redirect_uri():
+    return url_for("oauth2callback", _external=True)
+
+
+@app.route("/login-google")
+def login_google():
+    destino = request.args.get("next", "/curriculo")
+    session["google_next"] = destino if destino.startswith("/") else "/curriculo"
+
+    return redirect(google_login.url_de_login(_redirect_uri()))
+
+
+@app.route("/oauth2callback")
+def oauth2callback():
+    if request.args.get("error"):
+        return render_template(
+            "login_erro.html",
+            mensagem="O login com o Google foi cancelado ou negado."
+        ), 401
+
+    try:
+        google_login.concluir_login(_redirect_uri(), request.url)
+    except Exception:
+        app.logger.exception("Erro ao concluir login com o Google")
+        return render_template(
+            "login_erro.html",
+            mensagem="Não foi possível concluir o login com o Google."
+        ), 500
+
+    return redirect(session.pop("google_next", "/curriculo"))
+
+
+@app.route("/logout-google")
+def logout_google():
+    google_login.sair()
+    return redirect(url_for("index"))
+
+
+def _gmail_ou_401():
+    gmail = google_login.servico_gmail()
+
+    if gmail is None:
+        return None, (jsonify({
+            "success": False,
+            "login_required": True,
+            "message": "Sua sessão do Google expirou. Entre novamente."
+        }), 401)
+
+    return gmail, None
 
 
 
@@ -181,6 +248,10 @@ def ia():
 @app.route("/push", methods=["POST"])
 def processes_email_curriculum():
     
+    gmail, erro = _gmail_ou_401()
+    if erro:
+        return erro
+
     try:
         quant_curriculo = request.args.get(
             "quant_curriculo",
@@ -188,10 +259,10 @@ def processes_email_curriculum():
             type=int
         )
 
-        inbox      = gmail_inbox(quant_curriculo)
-        anexos     = attachment(inbox)
+        inbox      = gmail_inbox(gmail, quant_curriculo)
+        anexos     = attachment(gmail, inbox)
         curriculos = get_curriculum(anexos)
-        resultado  = fb_send_curriculum(curriculos)
+        resultado  = fb_send_curriculum(curriculos, session.get("google_email", ""))
 
         return jsonify({
             "success": True,
@@ -231,6 +302,55 @@ def list_curriculos():
             "success": False,
             "message": str(erro)
         }), 500
+
+
+# ============================================================
+# CURRÍCULOS — DOWNLOAD DO PDF DO CANDIDATO
+# ============================================================
+
+@app.route("/curriculo/<curriculo_id>/pdf", methods=["GET"])
+def baixar_curriculo_pdf(curriculo_id):
+
+    gmail, erro = _gmail_ou_401()
+    if erro:
+        return erro
+
+    try:
+        resultado = baixar_pdf_curriculo(gmail, curriculo_id)
+
+    except Exception as erro_gmail:
+        status = getattr(getattr(erro_gmail, "resp", None), "status", None)
+
+        if status == 404:
+            documento = fb_get_curriculum(curriculo_id) or {}
+            dono = documento.get("importado_por")
+
+            return jsonify({
+                "success": False,
+                "message": (
+                    f"Este e-mail não está na sua caixa de entrada. "
+                    f"Ele foi importado por {dono}." if dono else
+                    "Este e-mail não foi encontrado na sua caixa de entrada do Gmail."
+                )
+            }), 404
+
+        app.logger.exception("Erro ao baixar PDF do currículo")
+        return jsonify({"success": False, "message": "Erro ao buscar o PDF no Gmail."}), 500
+
+    if not resultado:
+        return jsonify({
+            "success": False,
+            "message": "Nenhum PDF foi encontrado neste e-mail."
+        }), 404
+
+    conteudo, nome = resultado
+
+    return send_file(
+        io.BytesIO(conteudo),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=nome
+    )
 
 
 # ============================================================

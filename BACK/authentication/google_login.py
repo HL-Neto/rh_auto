@@ -1,0 +1,160 @@
+"""
+Login com Google por usuário (OAuth 2.0 para aplicação web).
+
+Cada navegador recebe um identificador na sessão do Flask e as
+credenciais do Google ficam guardadas apenas na memória do servidor,
+associadas a esse identificador. Ao reiniciar o servidor, todos
+precisam entrar novamente.
+"""
+
+import json
+import os
+import secrets
+import threading
+
+from flask import session
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+
+
+# O sistema roda localmente em http://127.0.0.1, sem HTTPS.
+os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+# O Google pode devolver os escopos em outra ordem ou com "openid" extra.
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+CLIENT_SECRETS = os.path.join(BASE_DIR, "credentials.json")
+
+SCOPES = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "https://www.googleapis.com/auth/gmail.readonly",
+]
+
+_credenciais = {}
+_lock = threading.Lock()
+
+
+def _id_sessao(criar=False):
+    sid = session.get("google_sid")
+
+    if not sid and criar:
+        sid = secrets.token_urlsafe(24)
+        session["google_sid"] = sid
+
+    return sid
+
+
+def criar_flow(redirect_uri, state=None):
+    return Flow.from_client_secrets_file(
+        CLIENT_SECRETS,
+        scopes=SCOPES,
+        state=state,
+        redirect_uri=redirect_uri,
+    )
+
+
+def url_de_login(redirect_uri):
+    """Gera a URL do Google e guarda na sessão o que o retorno vai precisar."""
+    flow = criar_flow(redirect_uri)
+
+    url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="select_account",
+    )
+
+    session["google_state"] = state
+    session["google_verifier"] = getattr(flow, "code_verifier", None)
+
+    return url
+
+
+def concluir_login(redirect_uri, authorization_response):
+    """Troca o código devolvido pelo Google por credenciais e identifica o usuário."""
+    flow = criar_flow(redirect_uri, state=session.pop("google_state", None))
+
+    verifier = session.pop("google_verifier", None)
+    if verifier:
+        flow.code_verifier = verifier
+
+    flow.fetch_token(authorization_response=authorization_response)
+    creds = flow.credentials
+
+    perfil = build("oauth2", "v2", credentials=creds, cache_discovery=False) \
+        .userinfo().get().execute()
+
+    with _lock:
+        _credenciais[_id_sessao(criar=True)] = creds.to_json()
+
+    session["google_email"] = perfil.get("email", "")
+    session["google_nome"] = perfil.get("name", "")
+    session["google_foto"] = perfil.get("picture", "")
+
+    return perfil
+
+
+def obter_credenciais():
+    sid = _id_sessao()
+    if not sid:
+        return None
+
+    with _lock:
+        dados = _credenciais.get(sid)
+
+    if not dados:
+        return None
+
+    creds = Credentials.from_authorized_user_info(json.loads(dados), SCOPES)
+
+    if creds.valid:
+        return creds
+
+    if creds.expired and creds.refresh_token:
+        try:
+            creds.refresh(Request())
+        except Exception:
+            sair()
+            return None
+
+        with _lock:
+            _credenciais[sid] = creds.to_json()
+
+        return creds
+
+    return None
+
+
+def usuario_logado():
+    if not obter_credenciais():
+        return None
+
+    return {
+        "email": session.get("google_email", ""),
+        "nome": session.get("google_nome", ""),
+        "foto": session.get("google_foto", ""),
+    }
+
+
+def servico_gmail():
+    """Cliente da API do Gmail do usuário logado, ou None se não houver login."""
+    creds = obter_credenciais()
+    if not creds:
+        return None
+
+    return build("gmail", "v1", credentials=creds, cache_discovery=False)
+
+
+def sair():
+    sid = _id_sessao()
+
+    if sid:
+        with _lock:
+            _credenciais.pop(sid, None)
+
+    for chave in ("google_sid", "google_email", "google_nome", "google_foto",
+                  "google_state", "google_verifier"):
+        session.pop(chave, None)

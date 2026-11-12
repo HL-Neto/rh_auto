@@ -7,12 +7,11 @@ from dotenv import load_dotenv
 from firebase_admin import credentials, firestore
 from pypdf import PdfReader
 
-from BACK.authentication.conect_gmail import conectar_gmail
-
 
 load_dotenv()
 
-gmail = conectar_gmail()
+# As funções do Gmail recebem o cliente "gmail" do usuário logado
+# (ver BACK/authentication/google_login.py).
 
 
 # ============================================================
@@ -79,7 +78,7 @@ def fb_get_curriculum(curriculo_id="all"):
     return curriculos
 
 
-def fb_send_curriculum(curriculos):
+def fb_send_curriculum(curriculos, importado_por=""):
     """Salva os currículos extraídos dos e-mails no Firestore."""
     db = conectar_firebase()
     colecao = db.collection("curriculos")
@@ -93,6 +92,8 @@ def fb_send_curriculum(curriculos):
 
         colecao.document(str(doc_id)).set({
             "id": str(doc_id),
+            "importado_por": importado_por,
+            "nome_arquivo": candidato.get("nome_arquivo", ""),
             "conteudo": {
                 "remetente": candidato.get("remetente", "Não informado"),
                 "curriculo": candidato.get("curriculo", "")
@@ -110,7 +111,7 @@ def fb_send_curriculum(curriculos):
 # GMAIL
 # ============================================================
 
-def gmail_inbox(quant_curriculo=20):
+def gmail_inbox(gmail, quant_curriculo=20):
     subject_curriculo = [
         "currículo", "curriculo", "cv", "c.v.",
         "resume", "resumé", "curriculum", "curriculum vitae",
@@ -191,15 +192,23 @@ def gmail_inbox(quant_curriculo=20):
     return gmail_content
 
 
-def attachment(emails):
-    """Baixa anexos de e-mail em Base64."""
+def eh_pdf(parte):
+    nome = (parte.get("filename") or "").lower()
+    tipo = (parte.get("mimeType") or "").lower()
+    return nome.endswith(".pdf") or tipo == "application/pdf"
+
+
+def attachment(gmail, emails):
+    """Baixa os anexos em PDF dos e-mails, em Base64."""
     attachments = []
 
     def percorrer_partes(partes, email):
         for parte in partes:
             attachment_id = parte.get("body", {}).get("attachmentId")
 
-            if attachment_id:
+            # Imagens de assinatura e outros anexos não são currículos
+            # e quebrariam a leitura do PDF.
+            if attachment_id and eh_pdf(parte):
                 anexo = gmail.users().messages().attachments().get(
                     userId="me",
                     messageId=email["id"],
@@ -209,6 +218,7 @@ def attachment(emails):
                 attachments.append({
                     "id": email["id"],
                     "remetente": email.get("remetente", "Não informado"),
+                    "nome_arquivo": parte.get("filename", ""),
                     "data": anexo.get("data", "")
                 })
 
@@ -270,6 +280,7 @@ def get_curriculum(anexos):
             curriculos.append({
                 "id": anexo["id"],
                 "remetente": anexo.get("remetente", "Não informado"),
+                "nome_arquivo": anexo.get("nome_arquivo", ""),
                 "curriculo": texto_completo.strip()
             })
 
@@ -278,3 +289,37 @@ def get_curriculum(anexos):
                 os.remove(nome_arquivo)
 
     return curriculos
+
+
+def baixar_pdf_curriculo(gmail, message_id):
+    """
+    Busca no Gmail o PDF anexado ao e-mail do candidato.
+    O ID do documento no Firestore é o próprio ID da mensagem do Gmail.
+
+    Retorna (bytes_do_pdf, nome_do_arquivo) ou None se não houver PDF.
+    """
+    mensagem = gmail.users().messages().get(
+        userId="me",
+        id=message_id,
+        format="full"
+    ).execute()
+
+    pendentes = [mensagem.get("payload", {})]
+
+    while pendentes:
+        parte = pendentes.pop(0)
+        attachment_id = parte.get("body", {}).get("attachmentId")
+
+        if attachment_id and eh_pdf(parte):
+            anexo = gmail.users().messages().attachments().get(
+                userId="me",
+                messageId=message_id,
+                id=attachment_id
+            ).execute()
+
+            nome = parte.get("filename") or f"curriculo_{message_id}.pdf"
+            return base64.urlsafe_b64decode(anexo.get("data", "")), nome
+
+        pendentes.extend(parte.get("parts", []) or [])
+
+    return None
